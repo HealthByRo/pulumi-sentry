@@ -7,7 +7,7 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Pulumi.Serialization;
 
-namespace Pulumi.Xyz
+namespace Pulumi.Sentry
 {
     public partial class Random : Pulumi.CustomResource
     {
@@ -26,12 +26,12 @@ namespace Pulumi.Xyz
         /// <param name="args">The arguments used to populate this resource's properties</param>
         /// <param name="options">A bag of options that control this resource's behavior</param>
         public Random(string name, RandomArgs args, CustomResourceOptions? options = null)
-            : base("xyz:index:Random", name, args ?? new RandomArgs(), MakeResourceOptions(options, ""))
+            : base("sentry:index:Random", name, args ?? new RandomArgs(), MakeResourceOptions(options, ""))
         {
         }
 
         private Random(string name, Input<string> id, CustomResourceOptions? options = null)
-            : base("xyz:index:Random", name, null, MakeResourceOptions(options, id))
+            : base("sentry:index:Random", name, null, MakeResourceOptions(options, id))
         {
         }
 

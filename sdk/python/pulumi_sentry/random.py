@@ -8,18 +8,19 @@ import pulumi.runtime
 from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
 from . import _utilities, _tables
 
-__all__ = ['Provider']
+__all__ = ['Random']
 
 
-class Provider(pulumi.ProviderResource):
+class Random(pulumi.CustomResource):
     def __init__(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
+                 length: Optional[pulumi.Input[float]] = None,
                  __props__=None,
                  __name__=None,
                  __opts__=None):
         """
-        Create a Xyz resource with the given unique name, props, and options.
+        Create a Random resource with the given unique name, props, and options.
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
         """
@@ -40,11 +41,43 @@ class Provider(pulumi.ProviderResource):
                 raise TypeError('__props__ is only valid when passed in combination with a valid opts.id to get an existing resource')
             __props__ = dict()
 
-        super(Provider, __self__).__init__(
-            'xyz',
+            if length is None:
+                raise TypeError("Missing required property 'length'")
+            __props__['length'] = length
+            __props__['result'] = None
+        super(Random, __self__).__init__(
+            'sentry:index:Random',
             resource_name,
             __props__,
             opts)
+
+    @staticmethod
+    def get(resource_name: str,
+            id: pulumi.Input[str],
+            opts: Optional[pulumi.ResourceOptions] = None) -> 'Random':
+        """
+        Get an existing Random resource's state with the given name, id, and optional extra
+        properties used to qualify the lookup.
+
+        :param str resource_name: The unique name of the resulting resource.
+        :param pulumi.Input[str] id: The unique provider ID of the resource to lookup.
+        :param pulumi.ResourceOptions opts: Options for the resource.
+        """
+        opts = pulumi.ResourceOptions.merge(opts, pulumi.ResourceOptions(id=id))
+
+        __props__ = dict()
+
+        return Random(resource_name, opts=opts, __props__=__props__)
+
+    @property
+    @pulumi.getter
+    def length(self) -> pulumi.Output[float]:
+        return pulumi.get(self, "length")
+
+    @property
+    @pulumi.getter
+    def result(self) -> pulumi.Output[str]:
+        return pulumi.get(self, "result")
 
     def translate_output_property(self, prop):
         return _tables.CAMEL_TO_SNAKE_CASE_TABLE.get(prop) or prop

@@ -1,6 +1,8 @@
-# xyz Pulumi Provider
+# sentry Pulumi Provider
 
-This repo is a boilerplate showing how to create a native Pulumi provider.  You can search-replace `xyz` with the name of your desired provider as a starting point for creating a provider that manages resources in the target cloud.
+TODO: update this doc; everything below this paragraph is as it was imported from the pulumi-provider-boilerplate repo.
+
+--------
 
 Most of the code for the provider implementation is in `pkg/provider/provider.go`.  
 
@@ -8,21 +10,21 @@ An example of using the single resource defined in this example is in `examples/
 
 A code generator is available which generates SDKs in TypeScript, Python, Go and .NET which are also checked in to the `sdk` folder.  The SDKs are generated from a schema in `schema.json`.  This file shoudl be kept aligned with the resources, functions and types supported by the provider implementation.
 
-Note that the generated provider plugin (`pulumi-resource-xyz`) must be on your `PATH` to be used by Pulumi deployments.  If creating a provider for distribution to other users, you should ensure they install this plugin to their `PATH`.
+Note that the generated provider plugin (`pulumi-resource-sentry`) must be on your `PATH` to be used by Pulumi deployments.  If creating a provider for distribution to other users, you should ensure they install this plugin to their `PATH`.
 
 
 ## Build and Test
 
 ```bash
 # build the resource provider plugin
-$ go install ./cmd/pulumi-resource-xyz
+$ go install ./cmd/pulumi-resource-sentry
 
 # build the SDK generator
-$ go install ./cmd/pulumi-sdkgen-xyz
+$ go install ./cmd/pulumi-sdkgen-sentry
 
 # regenerate the SDK
 $ rm -rf ./sdk
-$ pulumi-sdkgen-xyz ./schema.json ./sdk
+$ pulumi-sdkgen-sentry ./schema.json ./sdk
 
 # test
 $ cd examples/simple

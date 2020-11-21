@@ -1,8 +1,8 @@
 {
-    "name": "xyz",
+    "name": "sentry",
     "version": "0.0.1",
     "resources": {
-        "xyz:index:Random": {
+        "sentry:index:Random": {
             "properties": {
                 "length": {
                     "type": "integer"

@@ -102,7 +102,7 @@ func emitFile(outDir, relPath string, contents []byte) error {
 
 func main() {
 	if len(os.Args) < 3 {
-		fmt.Printf("Usage: pulumi-sdkgen-xyz <schema-file> <target-sdk-folder>\n")
+		fmt.Printf("Usage: pulumi-sdkgen-sentry <schema-file> <target-sdk-folder>\n")
 		return
 	}
 
