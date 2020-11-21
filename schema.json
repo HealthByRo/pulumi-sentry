@@ -2,26 +2,30 @@
     "name": "sentry",
     "version": "0.0.1",
     "resources": {
-        "sentry:index:Random": {
+        "sentry:index:Project": {
             "properties": {
-                "length": {
-                    "type": "integer"
+                "name": {
+                    "type": "string"
                 },
-                "result": {
+                "slug": {
                     "type": "string"
                 }
             },
             "required": [
-                "length",
-                "result"
+                "name",
+                "slug"
             ],
             "inputProperties": {
-                "length": {
-                    "type": "integer"
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
                 }
             },
             "requiredInputs": [
-                "length"
+                "name",
+                "slug"
             ]
         }
     },

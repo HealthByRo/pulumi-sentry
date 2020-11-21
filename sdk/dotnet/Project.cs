@@ -9,29 +9,29 @@ using Pulumi.Serialization;
 
 namespace Pulumi.Sentry
 {
-    public partial class Random : Pulumi.CustomResource
+    public partial class Project : Pulumi.CustomResource
     {
-        [Output("length")]
-        public Output<int> Length { get; private set; } = null!;
+        [Output("name")]
+        public Output<string> Name { get; private set; } = null!;
 
-        [Output("result")]
-        public Output<string> Result { get; private set; } = null!;
+        [Output("slug")]
+        public Output<string> Slug { get; private set; } = null!;
 
 
         /// <summary>
-        /// Create a Random resource with the given unique name, arguments, and options.
+        /// Create a Project resource with the given unique name, arguments, and options.
         /// </summary>
         ///
         /// <param name="name">The unique name of the resource</param>
         /// <param name="args">The arguments used to populate this resource's properties</param>
         /// <param name="options">A bag of options that control this resource's behavior</param>
-        public Random(string name, RandomArgs args, CustomResourceOptions? options = null)
-            : base("sentry:index:Random", name, args ?? new RandomArgs(), MakeResourceOptions(options, ""))
+        public Project(string name, ProjectArgs args, CustomResourceOptions? options = null)
+            : base("sentry:index:Project", name, args ?? new ProjectArgs(), MakeResourceOptions(options, ""))
         {
         }
 
-        private Random(string name, Input<string> id, CustomResourceOptions? options = null)
-            : base("sentry:index:Random", name, null, MakeResourceOptions(options, id))
+        private Project(string name, Input<string> id, CustomResourceOptions? options = null)
+            : base("sentry:index:Project", name, null, MakeResourceOptions(options, id))
         {
         }
 
@@ -47,25 +47,28 @@ namespace Pulumi.Sentry
             return merged;
         }
         /// <summary>
-        /// Get an existing Random resource's state with the given name, ID, and optional extra
+        /// Get an existing Project resource's state with the given name, ID, and optional extra
         /// properties used to qualify the lookup.
         /// </summary>
         ///
         /// <param name="name">The unique name of the resulting resource.</param>
         /// <param name="id">The unique provider ID of the resource to lookup.</param>
         /// <param name="options">A bag of options that control this resource's behavior</param>
-        public static Random Get(string name, Input<string> id, CustomResourceOptions? options = null)
+        public static Project Get(string name, Input<string> id, CustomResourceOptions? options = null)
         {
-            return new Random(name, id, options);
+            return new Project(name, id, options);
         }
     }
 
-    public sealed class RandomArgs : Pulumi.ResourceArgs
+    public sealed class ProjectArgs : Pulumi.ResourceArgs
     {
-        [Input("length", required: true)]
-        public Input<int> Length { get; set; } = null!;
+        [Input("name", required: true)]
+        public Input<string> Name { get; set; } = null!;
 
-        public RandomArgs()
+        [Input("slug", required: true)]
+        public Input<string> Slug { get; set; } = null!;
+
+        public ProjectArgs()
         {
         }
     }

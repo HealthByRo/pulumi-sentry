@@ -15,8 +15,8 @@
 package main
 
 import (
-	"github.com/pulumi/pulumi-sentry/pkg/provider"
-	"github.com/pulumi/pulumi-sentry/pkg/version"
+	"github.com/HealthByRo/pulumi-sentry/pkg/provider"
+	"github.com/HealthByRo/pulumi-sentry/pkg/version"
 )
 
 var providerName = "sentry"
