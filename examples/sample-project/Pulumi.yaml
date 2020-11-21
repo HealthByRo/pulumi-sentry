@@ -1,0 +1,3 @@
+name: sample-project
+runtime: go
+description: A simple sentry example
