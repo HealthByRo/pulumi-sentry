@@ -17,12 +17,11 @@ package provider
 import (
 	"context"
 	"fmt"
-	"math/rand"
-	"time"
 
 	"github.com/pulumi/pulumi/pkg/v2/resource/provider"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource/plugin"
+	logger "github.com/pulumi/pulumi/sdk/v2/go/common/util/logging"
 	rpc "github.com/pulumi/pulumi/sdk/v2/proto/go"
 
 	pbempty "github.com/golang/protobuf/ptypes/empty"
@@ -32,6 +31,8 @@ type sentryProvider struct {
 	host    *provider.HostClient
 	name    string
 	version string
+
+	sentryClient *SentryClient
 }
 
 func makeProvider(host *provider.HostClient, name, version string) (rpc.ResourceProviderServer, error) {
@@ -50,11 +51,55 @@ func (k *sentryProvider) CheckConfig(ctx context.Context, req *rpc.CheckRequest)
 
 // DiffConfig diffs the configuration for this provider.
 func (k *sentryProvider) DiffConfig(ctx context.Context, req *rpc.DiffRequest) (*rpc.DiffResponse, error) {
+	urn := resource.URN(req.GetUrn())
+	label := fmt.Sprintf("%s.DiffConfig(%s)", k.label(), urn)
+	logger.V(9).Infof("%s executing", label)
+
+	olds, err := plugin.UnmarshalProperties(req.GetOlds(), plugin.MarshalOptions{
+		Label: fmt.Sprintf("%s.olds", label),
+	})
+	if err != nil {
+		return nil, err
+	}
+	news, err := plugin.UnmarshalProperties(req.GetNews(), plugin.MarshalOptions{
+		Label: fmt.Sprintf("%s.news", label),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed DiffConfig because of malformed resource inputs: %w", err)
+	}
+
+	var diffs []string
+	if olds["sentryToken"] != news["sentryToken"] {
+		diffs = append(diffs, "sentryToken")
+	}
+	if olds["sentryApiURL"] != news["sentryApiURL"] {
+		diffs = append(diffs, "sentryApiURL")
+	}
+	if len(diffs) > 0 {
+		return &rpc.DiffResponse{
+			Changes: rpc.DiffResponse_DIFF_SOME,
+			Diffs:   diffs,
+		}, nil
+	}
+
 	return &rpc.DiffResponse{}, nil
 }
 
 // Configure configures the resource provider with "globals" that control its behavior.
 func (k *sentryProvider) Configure(_ context.Context, req *rpc.ConfigureRequest) (*rpc.ConfigureResponse, error) {
+	vars := req.GetVariables()
+	logger.V(9).Infof("vars %v", vars)
+
+	var err error
+	k.sentryClient, err = NewSentryClient(vars["sentry:config:apiURL"], vars["sentry:config:token"])
+	if err != nil {
+		return nil, fmt.Errorf("could not initialize a sentry API client: %v", err)
+	}
+
+	if checkErr := k.sentryClient.Check(); checkErr != nil {
+		return nil, fmt.Errorf("could not communicate with sentry API: %v", checkErr)
+	}
+
 	return &rpc.ConfigureResponse{}, nil
 }
 
@@ -80,9 +125,10 @@ func (k *sentryProvider) StreamInvoke(req *rpc.InvokeRequest, server rpc.Resourc
 func (k *sentryProvider) Check(ctx context.Context, req *rpc.CheckRequest) (*rpc.CheckResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	ty := urn.Type()
-	if ty != "sentry:index:Random" {
+	if ty != "sentry:index:Project" {
 		return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 	}
+	// TODO: validate the slug
 	return &rpc.CheckResponse{Inputs: req.News, Failures: nil}, nil
 }
 
@@ -90,7 +136,7 @@ func (k *sentryProvider) Check(ctx context.Context, req *rpc.CheckRequest) (*rpc
 func (k *sentryProvider) Diff(ctx context.Context, req *rpc.DiffRequest) (*rpc.DiffResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	ty := urn.Type()
-	if ty != "sentry:index:Random" {
+	if ty != "sentry:index:Project" {
 		return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 	}
 
@@ -106,13 +152,17 @@ func (k *sentryProvider) Diff(ctx context.Context, req *rpc.DiffRequest) (*rpc.D
 
 	d := olds.Diff(news)
 	changes := rpc.DiffResponse_DIFF_NONE
-	if d.Changed("length") {
-		changes = rpc.DiffResponse_DIFF_SOME
+	var replaces []string
+	for _, key := range []resource.PropertyKey{"name", "slug"} {
+		if d.Changed(key) {
+			changes = rpc.DiffResponse_DIFF_SOME
+			replaces = append(replaces, string(key))
+		}
 	}
 
 	return &rpc.DiffResponse{
 		Changes:  changes,
-		Replaces: []string{"length"},
+		Replaces: replaces,
 	}, nil
 }
 
@@ -120,7 +170,7 @@ func (k *sentryProvider) Diff(ctx context.Context, req *rpc.DiffRequest) (*rpc.D
 func (k *sentryProvider) Create(ctx context.Context, req *rpc.CreateRequest) (*rpc.CreateResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	ty := urn.Type()
-	if ty != "sentry:index:Random" {
+	if ty != "sentry:index:Project" {
 		return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 	}
 
@@ -129,49 +179,52 @@ func (k *sentryProvider) Create(ctx context.Context, req *rpc.CreateRequest) (*r
 		return nil, err
 	}
 
-	if !inputs["length"].IsNumber() {
-		return nil, fmt.Errorf("Expected input property 'length' of type 'number' but got '%s", inputs["length"].TypeString())
-	}
+	_ = inputs
+	panic("Create: not implemented yet")
 
-	n := int(inputs["length"].NumberValue())
+	// if !inputs["length"].IsNumber() {
+	// 	return nil, fmt.Errorf("Expected input property 'length' of type 'number' but got '%s", inputs["length"].TypeString())
+	// }
 
-	// Actually "create" the random number
-	result := makeRandom(n)
+	// n := int(inputs["length"].NumberValue())
 
-	outputs := map[string]interface{}{
-		"length": n,
-		"result": result,
-	}
+	// // Actually "create" the random number
+	// result := makeRandom(n)
 
-	outputProperties, err := plugin.MarshalProperties(
-		resource.NewPropertyMapFromMap(outputs),
-		plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &rpc.CreateResponse{
-		Id:         result,
-		Properties: outputProperties,
-	}, nil
+	// outputs := map[string]interface{}{
+	// 	"length": n,
+	// 	"result": result,
+	// }
+
+	// outputProperties, err := plugin.MarshalProperties(
+	// 	resource.NewPropertyMapFromMap(outputs),
+	// 	plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true},
+	// )
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// return &rpc.CreateResponse{
+	// 	Id:         result,
+	// 	Properties: outputProperties,
+	// }, nil
 }
 
 // Read the current live state associated with a resource.
 func (k *sentryProvider) Read(ctx context.Context, req *rpc.ReadRequest) (*rpc.ReadResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	ty := urn.Type()
-	if ty != "sentry:index:Random" {
+	if ty != "sentry:index:Project" {
 		return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 	}
 
-	panic("Read not implemented for 'sentry:index:Random'")
+	panic("Read not implemented for 'sentry:index:Project'")
 }
 
 // Update updates an existing resource with new values.
 func (k *sentryProvider) Update(ctx context.Context, req *rpc.UpdateRequest) (*rpc.UpdateResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	ty := urn.Type()
-	if ty != "sentry:index:Random" {
+	if ty != "sentry:index:Project" {
 		return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 	}
 
@@ -184,7 +237,7 @@ func (k *sentryProvider) Update(ctx context.Context, req *rpc.UpdateRequest) (*r
 func (k *sentryProvider) Delete(ctx context.Context, req *rpc.DeleteRequest) (*pbempty.Empty, error) {
 	urn := resource.URN(req.GetUrn())
 	ty := urn.Type()
-	if ty != "sentry:index:Random" {
+	if ty != "sentry:index:Project" {
 		return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 	}
 
@@ -219,13 +272,6 @@ func (k *sentryProvider) Cancel(context.Context, *pbempty.Empty) (*pbempty.Empty
 	return &pbempty.Empty{}, nil
 }
 
-func makeRandom(length int) string {
-	seededRand := rand.New(rand.NewSource(time.Now().UnixNano()))
-	charset := []rune("abcdefghijklmnopqrstuvwsentryABCDEFGHIJKLMNOPQRSTUVWsentry0123456789")
-
-	result := make([]rune, length)
-	for i := range result {
-		result[i] = charset[seededRand.Intn(len(charset))]
-	}
-	return string(result)
+func (k *sentryProvider) label() string {
+	return fmt.Sprintf("Provider[%s]", k.name)
 }
