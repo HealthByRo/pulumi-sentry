@@ -1,6 +1,8 @@
 package provider
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -44,17 +46,57 @@ func (c *SentryClient) Check() error {
 	request.Header.Set("Authorization", "Bearer "+c.token)
 	resp, err := c.httpClient.Do(request)
 	if err != nil {
-		// return fmt.Errorf("call to %v failed: %v", projectsURL.String(), err)
 		return fmt.Errorf("call to %v failed: %v", request, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if _, err = ioutil.ReadAll(resp.Body); err != nil {
-		log.Error().Err(err).Msg("could not read auth-api response")
+		log.Error().Err(err).Msg("could not read Sentry response")
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("call to %v returned status %v", request, resp.StatusCode)
+	}
+
+	return nil
+}
+
+// CreateProject creates the project in Sentry.  A project in Sentry is
+// identified by the slug, so there is no need to return anything.
+func (c *SentryClient) CreateProject(organizationSlug, teamSlug, name, slug string) error {
+	projectsURL, err := c.url.Parse(fmt.Sprintf("teams/%s/%s/projects/", organizationSlug, teamSlug))
+	if err != nil {
+		return err
+	}
+
+	data, err := json.Marshal(map[string]string{
+		"name": name,
+		"slug": slug,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	request, err := http.NewRequest(http.MethodPost, projectsURL.String(), bytes.NewBuffer(data))
+	if err != nil {
+		return err
+	}
+	request.Header.Set("Authorization", "Bearer "+c.token)
+	request.Header.Set("Content-Type", "Application/json")
+
+	resp, err := c.httpClient.Do(request)
+	if err != nil {
+		return fmt.Errorf("call to %s %s failed: %v", request.Method, request.URL.String(), err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("could not read Sentry response")
+	}
+
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("call to %v returned status %v, response body: %#v", request, resp.StatusCode, string(responseBody))
 	}
 
 	return nil

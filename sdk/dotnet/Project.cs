@@ -11,13 +11,6 @@ namespace Pulumi.Sentry
 {
     public partial class Project : Pulumi.CustomResource
     {
-        [Output("name")]
-        public Output<string> Name { get; private set; } = null!;
-
-        [Output("slug")]
-        public Output<string> Slug { get; private set; } = null!;
-
-
         /// <summary>
         /// Create a Project resource with the given unique name, arguments, and options.
         /// </summary>
@@ -65,8 +58,14 @@ namespace Pulumi.Sentry
         [Input("name", required: true)]
         public Input<string> Name { get; set; } = null!;
 
+        [Input("organizationSlug", required: true)]
+        public Input<string> OrganizationSlug { get; set; } = null!;
+
         [Input("slug", required: true)]
         public Input<string> Slug { get; set; } = null!;
+
+        [Input("teamSlug", required: true)]
+        public Input<string> TeamSlug { get; set; } = null!;
 
         public ProjectArgs()
         {

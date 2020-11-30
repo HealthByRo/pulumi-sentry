@@ -11,8 +11,10 @@ func main() {
 
 func createProjects(ctx *pulumi.Context) error {
 	_, err := sentry.NewProject(ctx, "testing", &sentry.ProjectArgs{
-		Name: pulumi.String("Sample Project"),
-		Slug: pulumi.String("sample-project"),
+		Name:             pulumi.String("Sample Project"),
+		Slug:             pulumi.String("sample-project"),
+		OrganizationSlug: pulumi.String("ro-3w"),
+		TeamSlug:         pulumi.String("ro"),
 	})
 	if err != nil {
 		return err

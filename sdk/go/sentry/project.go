@@ -4,6 +4,7 @@
 package sentry
 
 import (
+	"context"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -12,9 +13,6 @@ import (
 
 type Project struct {
 	pulumi.CustomResourceState
-
-	Name pulumi.StringOutput `pulumi:"name"`
-	Slug pulumi.StringOutput `pulumi:"slug"`
 }
 
 // NewProject registers a new resource with the given unique name, arguments, and options.
@@ -23,8 +21,14 @@ func NewProject(ctx *pulumi.Context,
 	if args == nil || args.Name == nil {
 		return nil, errors.New("missing required argument 'Name'")
 	}
+	if args == nil || args.OrganizationSlug == nil {
+		return nil, errors.New("missing required argument 'OrganizationSlug'")
+	}
 	if args == nil || args.Slug == nil {
 		return nil, errors.New("missing required argument 'Slug'")
+	}
+	if args == nil || args.TeamSlug == nil {
+		return nil, errors.New("missing required argument 'TeamSlug'")
 	}
 	if args == nil {
 		args = &ProjectArgs{}
@@ -51,13 +55,9 @@ func GetProject(ctx *pulumi.Context,
 
 // Input properties used for looking up and filtering Project resources.
 type projectState struct {
-	Name *string `pulumi:"name"`
-	Slug *string `pulumi:"slug"`
 }
 
 type ProjectState struct {
-	Name pulumi.StringPtrInput
-	Slug pulumi.StringPtrInput
 }
 
 func (ProjectState) ElementType() reflect.Type {
@@ -65,16 +65,59 @@ func (ProjectState) ElementType() reflect.Type {
 }
 
 type projectArgs struct {
-	Name string `pulumi:"name"`
-	Slug string `pulumi:"slug"`
+	Name             string `pulumi:"name"`
+	OrganizationSlug string `pulumi:"organizationSlug"`
+	Slug             string `pulumi:"slug"`
+	TeamSlug         string `pulumi:"teamSlug"`
 }
 
 // The set of arguments for constructing a Project resource.
 type ProjectArgs struct {
-	Name pulumi.StringInput
-	Slug pulumi.StringInput
+	Name             pulumi.StringInput
+	OrganizationSlug pulumi.StringInput
+	Slug             pulumi.StringInput
+	TeamSlug         pulumi.StringInput
 }
 
 func (ProjectArgs) ElementType() reflect.Type {
 	return reflect.TypeOf((*projectArgs)(nil)).Elem()
+}
+
+type ProjectInput interface {
+	pulumi.Input
+
+	ToProjectOutput() ProjectOutput
+	ToProjectOutputWithContext(ctx context.Context) ProjectOutput
+}
+
+func (Project) ElementType() reflect.Type {
+	return reflect.TypeOf((*Project)(nil)).Elem()
+}
+
+func (i Project) ToProjectOutput() ProjectOutput {
+	return i.ToProjectOutputWithContext(context.Background())
+}
+
+func (i Project) ToProjectOutputWithContext(ctx context.Context) ProjectOutput {
+	return pulumi.ToOutputWithContext(ctx, i).(ProjectOutput)
+}
+
+type ProjectOutput struct {
+	*pulumi.OutputState
+}
+
+func (ProjectOutput) ElementType() reflect.Type {
+	return reflect.TypeOf((*ProjectOutput)(nil)).Elem()
+}
+
+func (o ProjectOutput) ToProjectOutput() ProjectOutput {
+	return o
+}
+
+func (o ProjectOutput) ToProjectOutputWithContext(ctx context.Context) ProjectOutput {
+	return o
+}
+
+func init() {
+	pulumi.RegisterOutputType(ProjectOutput{})
 }

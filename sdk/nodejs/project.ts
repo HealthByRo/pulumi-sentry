@@ -31,8 +31,6 @@ export class Project extends pulumi.CustomResource {
         return obj['__pulumiType'] === Project.__pulumiType;
     }
 
-    public readonly name!: pulumi.Output<string>;
-    public readonly slug!: pulumi.Output<string>;
 
     /**
      * Create a Project resource with the given unique name, arguments, and options.
@@ -47,14 +45,20 @@ export class Project extends pulumi.CustomResource {
             if (!args || args.name === undefined) {
                 throw new Error("Missing required property 'name'");
             }
+            if (!args || args.organizationSlug === undefined) {
+                throw new Error("Missing required property 'organizationSlug'");
+            }
             if (!args || args.slug === undefined) {
                 throw new Error("Missing required property 'slug'");
             }
+            if (!args || args.teamSlug === undefined) {
+                throw new Error("Missing required property 'teamSlug'");
+            }
             inputs["name"] = args ? args.name : undefined;
+            inputs["organizationSlug"] = args ? args.organizationSlug : undefined;
             inputs["slug"] = args ? args.slug : undefined;
+            inputs["teamSlug"] = args ? args.teamSlug : undefined;
         } else {
-            inputs["name"] = undefined /*out*/;
-            inputs["slug"] = undefined /*out*/;
         }
         if (!opts) {
             opts = {}
@@ -72,5 +76,7 @@ export class Project extends pulumi.CustomResource {
  */
 export interface ProjectArgs {
     readonly name: pulumi.Input<string>;
+    readonly organizationSlug: pulumi.Input<string>;
     readonly slug: pulumi.Input<string>;
+    readonly teamSlug: pulumi.Input<string>;
 }

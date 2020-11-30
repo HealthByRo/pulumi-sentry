@@ -3,7 +3,11 @@
 # *** Do not edit by hand unless you're certain you know what you are doing! ***
 
 SNAKE_TO_CAMEL_CASE_TABLE = {
+    "organization_slug": "organizationSlug",
+    "team_slug": "teamSlug",
 }
 
 CAMEL_TO_SNAKE_CASE_TABLE = {
+    "organizationSlug": "organization_slug",
+    "teamSlug": "team_slug",
 }

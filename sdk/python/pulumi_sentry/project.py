@@ -5,7 +5,7 @@
 import warnings
 import pulumi
 import pulumi.runtime
-from typing import Any, Dict, List, Mapping, Optional, Tuple, Union
+from typing import Any, Mapping, Optional, Sequence, Union
 from . import _utilities, _tables
 
 __all__ = ['Project']
@@ -16,7 +16,9 @@ class Project(pulumi.CustomResource):
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
                  name: Optional[pulumi.Input[str]] = None,
+                 organization_slug: Optional[pulumi.Input[str]] = None,
                  slug: Optional[pulumi.Input[str]] = None,
+                 team_slug: Optional[pulumi.Input[str]] = None,
                  __props__=None,
                  __name__=None,
                  __opts__=None):
@@ -45,9 +47,15 @@ class Project(pulumi.CustomResource):
             if name is None:
                 raise TypeError("Missing required property 'name'")
             __props__['name'] = name
+            if organization_slug is None:
+                raise TypeError("Missing required property 'organization_slug'")
+            __props__['organization_slug'] = organization_slug
             if slug is None:
                 raise TypeError("Missing required property 'slug'")
             __props__['slug'] = slug
+            if team_slug is None:
+                raise TypeError("Missing required property 'team_slug'")
+            __props__['team_slug'] = team_slug
         super(Project, __self__).__init__(
             'sentry:index:Project',
             resource_name,
@@ -71,16 +79,6 @@ class Project(pulumi.CustomResource):
         __props__ = dict()
 
         return Project(resource_name, opts=opts, __props__=__props__)
-
-    @property
-    @pulumi.getter
-    def name(self) -> pulumi.Output[str]:
-        return pulumi.get(self, "name")
-
-    @property
-    @pulumi.getter
-    def slug(self) -> pulumi.Output[str]:
-        return pulumi.get(self, "slug")
 
     def translate_output_property(self, prop):
         return _tables.CAMEL_TO_SNAKE_CASE_TABLE.get(prop) or prop

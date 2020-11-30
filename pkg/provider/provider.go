@@ -151,6 +151,10 @@ func (k *sentryProvider) Diff(ctx context.Context, req *rpc.DiffRequest) (*rpc.D
 	}
 
 	d := olds.Diff(news)
+	if d == nil {
+		return &rpc.DiffResponse{}, nil
+	}
+
 	changes := rpc.DiffResponse_DIFF_NONE
 	var replaces []string
 	for _, key := range []resource.PropertyKey{"name", "slug"} {
@@ -179,34 +183,33 @@ func (k *sentryProvider) Create(ctx context.Context, req *rpc.CreateRequest) (*r
 		return nil, err
 	}
 
-	_ = inputs
-	panic("Create: not implemented yet")
+	organizationSlug := inputs["organizationSlug"].StringValue()
+	name := inputs["name"].StringValue()
+	slug := inputs["slug"].StringValue()
+	teamSlug := inputs["teamSlug"].StringValue()
 
-	// if !inputs["length"].IsNumber() {
-	// 	return nil, fmt.Errorf("Expected input property 'length' of type 'number' but got '%s", inputs["length"].TypeString())
-	// }
+	if err := k.sentryClient.CreateProject(organizationSlug, teamSlug, name, slug); err != nil {
+		return nil, fmt.Errorf("could not CreateProject %v: %v", slug, err)
+	}
 
-	// n := int(inputs["length"].NumberValue())
+	outputs := map[string]interface{}{
+		"organizationSlug": organizationSlug,
+		"name":             name,
+		"slug":             slug,
+		"teamSlug":         teamSlug,
+	}
 
-	// // Actually "create" the random number
-	// result := makeRandom(n)
-
-	// outputs := map[string]interface{}{
-	// 	"length": n,
-	// 	"result": result,
-	// }
-
-	// outputProperties, err := plugin.MarshalProperties(
-	// 	resource.NewPropertyMapFromMap(outputs),
-	// 	plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true},
-	// )
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// return &rpc.CreateResponse{
-	// 	Id:         result,
-	// 	Properties: outputProperties,
-	// }, nil
+	outputProperties, err := plugin.MarshalProperties(
+		resource.NewPropertyMapFromMap(outputs),
+		plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &rpc.CreateResponse{
+		Id:         slug,
+		Properties: outputProperties,
+	}, nil
 }
 
 // Read the current live state associated with a resource.

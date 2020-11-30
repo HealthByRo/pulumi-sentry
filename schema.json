@@ -3,29 +3,25 @@
     "version": "0.0.1",
     "resources": {
         "sentry:index:Project": {
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "slug": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "name",
-                "slug"
-            ],
             "inputProperties": {
+                "organizationSlug": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
                 "slug": {
+                    "type": "string"
+                },
+                "teamSlug": {
                     "type": "string"
                 }
             },
             "requiredInputs": [
+                "organizationSlug",
                 "name",
-                "slug"
+                "slug",
+                "teamSlug"
             ]
         }
     },
