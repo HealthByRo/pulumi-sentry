@@ -150,6 +150,12 @@ func (k *sentryProvider) Diff(ctx context.Context, req *rpc.DiffRequest) (*rpc.D
 		return nil, err
 	}
 
+	return k.doDiff(olds, news)
+}
+
+func (k *sentryProvider) doDiff(olds, news resource.PropertyMap) (*rpc.DiffResponse, error) {
+	// TODO: be more detailed with Diff results, mind DeleteBeforeReplace,
+
 	d := olds.Diff(news)
 	if d == nil {
 		return &rpc.DiffResponse{}, nil
@@ -157,7 +163,7 @@ func (k *sentryProvider) Diff(ctx context.Context, req *rpc.DiffRequest) (*rpc.D
 
 	changes := rpc.DiffResponse_DIFF_NONE
 	var replaces []string
-	for _, key := range []resource.PropertyKey{"name", "slug"} {
+	for _, key := range []resource.PropertyKey{"organizationSlug", "name", "slug", "teamSlug"} {
 		if d.Changed(key) {
 			changes = rpc.DiffResponse_DIFF_SOME
 			replaces = append(replaces, string(key))
