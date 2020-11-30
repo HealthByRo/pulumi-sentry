@@ -86,7 +86,7 @@ func (k *sentryProvider) DiffConfig(ctx context.Context, req *rpc.DiffRequest) (
 }
 
 // Configure configures the resource provider with "globals" that control its behavior.
-func (k *sentryProvider) Configure(_ context.Context, req *rpc.ConfigureRequest) (*rpc.ConfigureResponse, error) {
+func (k *sentryProvider) Configure(ctx context.Context, req *rpc.ConfigureRequest) (*rpc.ConfigureResponse, error) {
 	vars := req.GetVariables()
 	logger.V(9).Infof("vars %v", vars)
 
@@ -96,7 +96,7 @@ func (k *sentryProvider) Configure(_ context.Context, req *rpc.ConfigureRequest)
 		return nil, fmt.Errorf("could not initialize a sentry API client: %v", err)
 	}
 
-	if checkErr := k.sentryClient.Check(); checkErr != nil {
+	if checkErr := k.sentryClient.Check(ctx); checkErr != nil {
 		return nil, fmt.Errorf("could not communicate with sentry API: %v", checkErr)
 	}
 
@@ -194,7 +194,7 @@ func (k *sentryProvider) Create(ctx context.Context, req *rpc.CreateRequest) (*r
 	slug := inputs["slug"].StringValue()
 	teamSlug := inputs["teamSlug"].StringValue()
 
-	if err := k.sentryClient.CreateProject(organizationSlug, teamSlug, name, slug); err != nil {
+	if err := k.sentryClient.CreateProject(ctx, organizationSlug, teamSlug, name, slug); err != nil {
 		return nil, fmt.Errorf("could not CreateProject %v: %v", slug, err)
 	}
 
@@ -256,7 +256,7 @@ func (k *sentryProvider) Delete(ctx context.Context, req *rpc.DeleteRequest) (*p
 
 	organizationSlug := inputs["organizationSlug"].StringValue()
 	slug := inputs["slug"].StringValue()
-	err = k.sentryClient.DeleteProject(organizationSlug, slug)
+	err = k.sentryClient.DeleteProject(ctx, organizationSlug, slug)
 
 	return &pbempty.Empty{}, err
 }
