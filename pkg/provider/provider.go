@@ -249,9 +249,16 @@ func (k *sentryProvider) Delete(ctx context.Context, req *rpc.DeleteRequest) (*p
 	if ty != "sentry:index:Project" {
 		return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 	}
+	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true})
+	if err != nil {
+		return nil, err
+	}
 
-	// Note that for our Random resource, we don't have to do anything on Delete.
-	return &pbempty.Empty{}, nil
+	organizationSlug := inputs["organizationSlug"].StringValue()
+	slug := inputs["slug"].StringValue()
+	err = k.sentryClient.DeleteProject(organizationSlug, slug)
+
+	return &pbempty.Empty{}, err
 }
 
 // Construct creates a new component resource.

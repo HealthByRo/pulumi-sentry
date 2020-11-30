@@ -96,7 +96,38 @@ func (c *SentryClient) CreateProject(organizationSlug, teamSlug, name, slug stri
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("call to %v returned status %v, response body: %#v", request, resp.StatusCode, string(responseBody))
+		return fmt.Errorf("call to %v %v returned status %v, response body: %#v", request.Method, request.URL.String(), resp.StatusCode, string(responseBody))
+	}
+
+	return nil
+}
+
+// DeleteProject creates the project from Sentry.
+func (c *SentryClient) DeleteProject(organizationSlug, slug string) error {
+	projectsURL, err := c.url.Parse(fmt.Sprintf("projects/%s/%s/", organizationSlug, slug))
+	if err != nil {
+		return err
+	}
+
+	request, err := http.NewRequest(http.MethodDelete, projectsURL.String(), nil)
+	if err != nil {
+		return err
+	}
+	request.Header.Set("Authorization", "Bearer "+c.token)
+
+	resp, err := c.httpClient.Do(request)
+	if err != nil {
+		return fmt.Errorf("call to %s %s failed: %v", request.Method, request.URL.String(), err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("could not read Sentry response")
+	}
+
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("call to %v %v returned status %v, response body: %#v", request.Method, request.URL.String(), resp.StatusCode, string(responseBody))
 	}
 
 	return nil
