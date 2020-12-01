@@ -46,11 +46,11 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 
 	organization, err := k.sentryClient.GetOrganization(organizationSlug)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not retrieve Organization %#v: %v", organizationSlug, err)
 	}
 	team, err := k.sentryClient.GetTeam(organization, teamSlug)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not retrieve Team: %v", err)
 	}
 
 	project, err := k.sentryClient.CreateProject(organization, team, name, &slug)
