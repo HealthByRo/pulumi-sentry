@@ -30,7 +30,7 @@ func createProjects(ctx *pulumi.Context) error {
 
 func getenvWithDefault(name, dflt string) string {
 	ret := os.Getenv(name)
-	if name != "" {
+	if ret != "" {
 		return ret
 	}
 	return dflt
