@@ -168,15 +168,10 @@ func (k *sentryProvider) Create(ctx context.Context, req *rpc.CreateRequest) (*r
 
 // Read the current live state associated with a resource.
 func (k *sentryProvider) Read(ctx context.Context, req *rpc.ReadRequest) (*rpc.ReadResponse, error) {
-	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true})
-	if err != nil {
-		return nil, err
-	}
-
 	urn := resource.URN(req.GetUrn())
 	ty := urn.Type()
 	if ty == "sentry:index:Project" {
-		return k.projectRead(ctx, req, inputs)
+		return k.projectRead(ctx, req)
 	}
 
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
