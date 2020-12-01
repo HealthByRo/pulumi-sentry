@@ -23,7 +23,7 @@ func createProjects(ctx *pulumi.Context) error {
 	}
 
 	if !skipProject {
-		_, err := sentry.NewProject(ctx, "testing", &sentry.ProjectArgs{
+		projectOutput, err := sentry.NewProject(ctx, "testing", &sentry.ProjectArgs{
 			Name:             pulumi.String(getenvWithDefault("PROJ_NAME", "Sample Project")),
 			Slug:             pulumi.String(getenvWithDefault("PROJ_SLUG", "sample-project")),
 			OrganizationSlug: pulumi.String(orgSlug),
@@ -32,7 +32,10 @@ func createProjects(ctx *pulumi.Context) error {
 		if err != nil {
 			return err
 		}
+		ctx.Export("sentry-project-name", projectOutput.Name)
+		ctx.Export("sentry-project-slug", projectOutput.Slug)
 	}
+
 	return nil
 }
 
