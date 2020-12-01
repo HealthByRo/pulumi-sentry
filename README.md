@@ -25,7 +25,7 @@ make rebuild-sdk go-install-provider && pulumi -C examples/sample-project/ up
 ## Running the sample project
 
 1. Get a sentry account somewhere; free accounts on sentry.io are good enough.
-   Create a team, it will be a bit easier if you use the name `ro` for it.
+   Create a team, it will be a bit easier if you use the name `test-team` for it.
 2. In Sentry, "Organization Settings" -> "Developer Settings" create an
    "Internal integration" and make sure it has Admin permissions to Project,
    Team, and Organization resources.
