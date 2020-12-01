@@ -15,7 +15,7 @@ func createProjects(ctx *pulumi.Context) error {
 	if os.Getenv("SKIP_PROJECT") == "" {
 		_, err := sentry.NewProject(ctx, "testing", &sentry.ProjectArgs{
 			Name:             pulumi.String("Sample Project"),
-			Slug:             pulumi.String("sample-project-2"),
+			Slug:             pulumi.String("sample-project"),
 			OrganizationSlug: pulumi.String("ro-3w"),
 			TeamSlug:         pulumi.String("ro"),
 		})
