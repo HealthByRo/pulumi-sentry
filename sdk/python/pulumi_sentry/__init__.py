@@ -3,6 +3,6 @@
 # *** Do not edit by hand unless you're certain you know what you are doing! ***
 
 # Export this package's modules as members:
-from .key import *
+from .client_key import *
 from .project import *
 from .provider import *

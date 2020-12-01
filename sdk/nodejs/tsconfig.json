@@ -13,8 +13,8 @@
         "strict": true
     },
     "files": [
+        "clientKey.ts",
         "index.ts",
-        "key.ts",
         "project.ts",
         "provider.ts",
         "utilities.ts"

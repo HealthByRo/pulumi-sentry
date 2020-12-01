@@ -41,6 +41,60 @@
                 "name",
                 "teamSlug"
             ]
+        },
+        "sentry:index:ClientKey": {
+            "inputProperties": {
+                "name": {
+                    "type": "string"
+                },
+                "organizationSlug": {
+                    "type": "string"
+                },
+                "projectSlug": {
+                    "type": "string"
+                }
+            },
+            "requiredInputs": [
+                "name",
+                "organizationSlug",
+                "projectSlug"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "organizationSlug": {
+                    "type": "string"
+                },
+                "projectSlug": {
+                    "type": "string"
+                },
+                "dsnSecret": {
+                    "type": "string",
+                    "secret": true
+                },
+                "dsnCSP": {
+                    "type": "string"
+                },
+                "dsnPublic": {
+                    "type": "string"
+                },
+                "secret": {
+                    "type": "string",
+                    "secret": true
+                },
+                "public": {
+                    "type": "string"
+                },
+                "dateCreated": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "name",
+                "organizationSlug",
+                "projectSlug"
+            ]
         }
     },
     "language": {

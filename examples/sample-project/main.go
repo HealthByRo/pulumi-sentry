@@ -34,6 +34,22 @@ func createProjects(ctx *pulumi.Context) error {
 		}
 		ctx.Export("sentry-project-name", projectOutput.Name)
 		ctx.Export("sentry-project-slug", projectOutput.Slug)
+
+		keyOutput, err := sentry.NewClientKey(ctx, "testing-client-key", &sentry.ClientKeyArgs{
+			Name:             pulumi.String("the-name"),
+			OrganizationSlug: pulumi.String(orgSlug),
+			ProjectSlug: projectOutput.Slug.ApplyString(func(slugValue *string) string {
+				return *slugValue
+			}),
+		})
+		if err != nil {
+			return err
+		}
+		ctx.Export("sentry-client-key-name", keyOutput.Name)
+		ctx.Export("sentry-client-key-dsn-public", keyOutput.DsnPublic)
+		ctx.Export("sentry-client-key-dsn-secret", keyOutput.DsnSecret)
+		ctx.Export("sentry-client-key-public", keyOutput.Public)
+		ctx.Export("sentry-client-key-secret", keyOutput.Secret)
 	}
 
 	return nil

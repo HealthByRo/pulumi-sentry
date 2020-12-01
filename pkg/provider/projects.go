@@ -141,7 +141,7 @@ func buildProjectID(organizationSlug, slug string) string {
 	return fmt.Sprintf("%s/%s", organizationSlug, slug)
 }
 
-func parseProjectID(id string) (string, string, error) {
+func parseProjectID(id string) (organizationSlug, slug string, err error) {
 	parts := strings.Split(id, "/")
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("invalid ID: %s", id)
