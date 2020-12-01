@@ -12,16 +12,26 @@ func main() {
 }
 
 func createProjects(ctx *pulumi.Context) error {
-	if os.Getenv("SKIP_PROJECT") == "" {
+	skipProject := os.Getenv("SKIP_PROJECT") != ""
+
+	if !skipProject {
 		_, err := sentry.NewProject(ctx, "testing", &sentry.ProjectArgs{
-			Name:             pulumi.String("Sample Project"),
-			Slug:             pulumi.String("sample-project"),
-			OrganizationSlug: pulumi.String("ro-3w"),
-			TeamSlug:         pulumi.String("ro"),
+			Name:             pulumi.String(getenvWithDefault("PROJ_NAME", "Sample Project")),
+			Slug:             pulumi.String(getenvWithDefault("PROJ_SLUG", "sample-project")),
+			OrganizationSlug: pulumi.String(getenvWithDefault("ORG_SLUG", "ro-3w")),
+			TeamSlug:         pulumi.String(getenvWithDefault("TEAM_SLUG", "ro")),
 		})
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func getenvWithDefault(name, dflt string) string {
+	ret := os.Getenv(name)
+	if name != "" {
+		return ret
+	}
+	return dflt
 }

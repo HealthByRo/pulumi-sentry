@@ -23,6 +23,7 @@ make rebuild-sdk go-install-provider && pulumi -C examples/sample-project/ up
 ## Running the sample project
 
 1. Get a sentry account somewhere; free accounts on sentry.io are good enough.
+   Create a team, it will be a bit easier if you use the name `ro` for it.
 2. In Sentry, "Organization Settings" -> "Developer Settings" create an
    "Internal integration" and make sure it has Admin permissions to Project,
    Team, and Organization resources.
@@ -39,6 +40,10 @@ pulumi config set --secret sentry:token <integration-token>
 
 You might need to find the right API URL if you use Sentry other than https://sentry.io.
 
+To make testing easier, `sample-project` is configurable via environment
+variables.  You will have to override at least the organization slug, see
+`examples/sample-project/main.go` for the list of variables.  You can also test
+adding or removing the project by setting `SKIP_PROJECT=1`.
 
 ## References
 
