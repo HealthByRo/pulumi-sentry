@@ -20,7 +20,25 @@
             "requiredInputs": [
                 "organizationSlug",
                 "name",
-                "slug",
+                "teamSlug"
+            ],
+            "properties": {
+                "organizationSlug": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "teamSlug": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "organizationSlug",
+                "name",
                 "teamSlug"
             ]
         }

@@ -13,6 +13,11 @@ import (
 
 type Project struct {
 	pulumi.CustomResourceState
+
+	Name             pulumi.StringOutput    `pulumi:"name"`
+	OrganizationSlug pulumi.StringOutput    `pulumi:"organizationSlug"`
+	Slug             pulumi.StringPtrOutput `pulumi:"slug"`
+	TeamSlug         pulumi.StringOutput    `pulumi:"teamSlug"`
 }
 
 // NewProject registers a new resource with the given unique name, arguments, and options.
@@ -23,9 +28,6 @@ func NewProject(ctx *pulumi.Context,
 	}
 	if args == nil || args.OrganizationSlug == nil {
 		return nil, errors.New("missing required argument 'OrganizationSlug'")
-	}
-	if args == nil || args.Slug == nil {
-		return nil, errors.New("missing required argument 'Slug'")
 	}
 	if args == nil || args.TeamSlug == nil {
 		return nil, errors.New("missing required argument 'TeamSlug'")
@@ -55,9 +57,17 @@ func GetProject(ctx *pulumi.Context,
 
 // Input properties used for looking up and filtering Project resources.
 type projectState struct {
+	Name             *string `pulumi:"name"`
+	OrganizationSlug *string `pulumi:"organizationSlug"`
+	Slug             *string `pulumi:"slug"`
+	TeamSlug         *string `pulumi:"teamSlug"`
 }
 
 type ProjectState struct {
+	Name             pulumi.StringPtrInput
+	OrganizationSlug pulumi.StringPtrInput
+	Slug             pulumi.StringPtrInput
+	TeamSlug         pulumi.StringPtrInput
 }
 
 func (ProjectState) ElementType() reflect.Type {
@@ -65,17 +75,17 @@ func (ProjectState) ElementType() reflect.Type {
 }
 
 type projectArgs struct {
-	Name             string `pulumi:"name"`
-	OrganizationSlug string `pulumi:"organizationSlug"`
-	Slug             string `pulumi:"slug"`
-	TeamSlug         string `pulumi:"teamSlug"`
+	Name             string  `pulumi:"name"`
+	OrganizationSlug string  `pulumi:"organizationSlug"`
+	Slug             *string `pulumi:"slug"`
+	TeamSlug         string  `pulumi:"teamSlug"`
 }
 
 // The set of arguments for constructing a Project resource.
 type ProjectArgs struct {
 	Name             pulumi.StringInput
 	OrganizationSlug pulumi.StringInput
-	Slug             pulumi.StringInput
+	Slug             pulumi.StringPtrInput
 	TeamSlug         pulumi.StringInput
 }
 

@@ -14,6 +14,7 @@
     },
     "files": [
         "index.ts",
+        "key.ts",
         "project.ts",
         "provider.ts",
         "utilities.ts"

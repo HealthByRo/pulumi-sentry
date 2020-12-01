@@ -8,22 +8,20 @@ import pulumi.runtime
 from typing import Any, Mapping, Optional, Sequence, Union
 from . import _utilities, _tables
 
-__all__ = ['Project']
+__all__ = ['Key']
 
 
-class Project(pulumi.CustomResource):
+class Key(pulumi.CustomResource):
     def __init__(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
                  name: Optional[pulumi.Input[str]] = None,
-                 organization_slug: Optional[pulumi.Input[str]] = None,
-                 slug: Optional[pulumi.Input[str]] = None,
-                 team_slug: Optional[pulumi.Input[str]] = None,
+                 project_id: Optional[pulumi.Input[str]] = None,
                  __props__=None,
                  __name__=None,
                  __opts__=None):
         """
-        Create a Project resource with the given unique name, props, and options.
+        Create a Key resource with the given unique name, props, and options.
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
         """
@@ -47,15 +45,11 @@ class Project(pulumi.CustomResource):
             if name is None:
                 raise TypeError("Missing required property 'name'")
             __props__['name'] = name
-            if organization_slug is None:
-                raise TypeError("Missing required property 'organization_slug'")
-            __props__['organization_slug'] = organization_slug
-            __props__['slug'] = slug
-            if team_slug is None:
-                raise TypeError("Missing required property 'team_slug'")
-            __props__['team_slug'] = team_slug
-        super(Project, __self__).__init__(
-            'sentry:index:Project',
+            if project_id is None:
+                raise TypeError("Missing required property 'project_id'")
+            __props__['project_id'] = project_id
+        super(Key, __self__).__init__(
+            'sentry:index:Key',
             resource_name,
             __props__,
             opts)
@@ -63,9 +57,9 @@ class Project(pulumi.CustomResource):
     @staticmethod
     def get(resource_name: str,
             id: pulumi.Input[str],
-            opts: Optional[pulumi.ResourceOptions] = None) -> 'Project':
+            opts: Optional[pulumi.ResourceOptions] = None) -> 'Key':
         """
-        Get an existing Project resource's state with the given name, id, and optional extra
+        Get an existing Key resource's state with the given name, id, and optional extra
         properties used to qualify the lookup.
 
         :param str resource_name: The unique name of the resulting resource.
@@ -76,27 +70,7 @@ class Project(pulumi.CustomResource):
 
         __props__ = dict()
 
-        return Project(resource_name, opts=opts, __props__=__props__)
-
-    @property
-    @pulumi.getter
-    def name(self) -> pulumi.Output[str]:
-        return pulumi.get(self, "name")
-
-    @property
-    @pulumi.getter(name="organizationSlug")
-    def organization_slug(self) -> pulumi.Output[str]:
-        return pulumi.get(self, "organization_slug")
-
-    @property
-    @pulumi.getter
-    def slug(self) -> pulumi.Output[Optional[str]]:
-        return pulumi.get(self, "slug")
-
-    @property
-    @pulumi.getter(name="teamSlug")
-    def team_slug(self) -> pulumi.Output[str]:
-        return pulumi.get(self, "team_slug")
+        return Key(resource_name, opts=opts, __props__=__props__)
 
     def translate_output_property(self, prop):
         return _tables.CAMEL_TO_SNAKE_CASE_TABLE.get(prop) or prop
