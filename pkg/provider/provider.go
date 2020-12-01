@@ -125,20 +125,16 @@ func (k *sentryProvider) StreamInvoke(req *rpc.InvokeRequest, server rpc.Resourc
 func (k *sentryProvider) Check(ctx context.Context, req *rpc.CheckRequest) (*rpc.CheckResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	ty := urn.Type()
-	if ty != "sentry:index:Project" {
-		return nil, fmt.Errorf("Unknown resource type '%s'", ty)
+	if ty == "sentry:index:Project" {
+		return k.projectCheck(ctx, req)
 	}
-	// TODO: validate the slug
-	return &rpc.CheckResponse{Inputs: req.News, Failures: nil}, nil
+	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 }
 
 // Diff checks what impacts a hypothetical update will have on the resource's properties.
 func (k *sentryProvider) Diff(ctx context.Context, req *rpc.DiffRequest) (*rpc.DiffResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	ty := urn.Type()
-	if ty != "sentry:index:Project" {
-		return nil, fmt.Errorf("Unknown resource type '%s'", ty)
-	}
 
 	olds, err := plugin.UnmarshalProperties(req.GetOlds(), plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true})
 	if err != nil {
@@ -150,72 +146,26 @@ func (k *sentryProvider) Diff(ctx context.Context, req *rpc.DiffRequest) (*rpc.D
 		return nil, err
 	}
 
-	return k.doDiff(olds, news)
-}
-
-func (k *sentryProvider) doDiff(olds, news resource.PropertyMap) (*rpc.DiffResponse, error) {
-	// TODO: be more detailed with Diff results, mind DeleteBeforeReplace,
-
-	d := olds.Diff(news)
-	if d == nil {
-		return &rpc.DiffResponse{}, nil
+	if ty == "sentry:index:Project" {
+		return k.projectDiff(olds, news)
 	}
 
-	changes := rpc.DiffResponse_DIFF_NONE
-	var replaces []string
-	for _, key := range []resource.PropertyKey{"organizationSlug", "name", "slug", "teamSlug"} {
-		if d.Changed(key) {
-			changes = rpc.DiffResponse_DIFF_SOME
-			replaces = append(replaces, string(key))
-		}
-	}
-
-	return &rpc.DiffResponse{
-		Changes:  changes,
-		Replaces: replaces,
-	}, nil
+	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 }
 
 // Create allocates a new instance of the provided resource and returns its unique ID afterwards.
 func (k *sentryProvider) Create(ctx context.Context, req *rpc.CreateRequest) (*rpc.CreateResponse, error) {
-	urn := resource.URN(req.GetUrn())
-	ty := urn.Type()
-	if ty != "sentry:index:Project" {
-		return nil, fmt.Errorf("Unknown resource type '%s'", ty)
-	}
-
 	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true})
 	if err != nil {
 		return nil, err
 	}
 
-	organizationSlug := inputs["organizationSlug"].StringValue()
-	name := inputs["name"].StringValue()
-	slug := inputs["slug"].StringValue()
-	teamSlug := inputs["teamSlug"].StringValue()
-
-	if err := k.sentryClient.CreateProject(ctx, organizationSlug, teamSlug, name, slug); err != nil {
-		return nil, fmt.Errorf("could not CreateProject %v: %v", slug, err)
+	urn := resource.URN(req.GetUrn())
+	ty := urn.Type()
+	if ty == "sentry:index:Project" {
+		return k.projectCreate(ctx, req, inputs)
 	}
-
-	outputs := map[string]interface{}{
-		"organizationSlug": organizationSlug,
-		"name":             name,
-		"slug":             slug,
-		"teamSlug":         teamSlug,
-	}
-
-	outputProperties, err := plugin.MarshalProperties(
-		resource.NewPropertyMapFromMap(outputs),
-		plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true},
-	)
-	if err != nil {
-		return nil, err
-	}
-	return &rpc.CreateResponse{
-		Id:         slug,
-		Properties: outputProperties,
-	}, nil
+	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 }
 
 // Read the current live state associated with a resource.
@@ -244,21 +194,18 @@ func (k *sentryProvider) Update(ctx context.Context, req *rpc.UpdateRequest) (*r
 // Delete tears down an existing resource with the given ID.  If it fails, the resource is assumed
 // to still exist.
 func (k *sentryProvider) Delete(ctx context.Context, req *rpc.DeleteRequest) (*pbempty.Empty, error) {
-	urn := resource.URN(req.GetUrn())
-	ty := urn.Type()
-	if ty != "sentry:index:Project" {
-		return nil, fmt.Errorf("Unknown resource type '%s'", ty)
-	}
 	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true})
 	if err != nil {
 		return nil, err
 	}
 
-	organizationSlug := inputs["organizationSlug"].StringValue()
-	slug := inputs["slug"].StringValue()
-	err = k.sentryClient.DeleteProject(ctx, organizationSlug, slug)
+	urn := resource.URN(req.GetUrn())
+	ty := urn.Type()
+	if ty == "sentry:index:Project" {
+		return k.projectDelete(ctx, req, inputs)
+	}
+	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 
-	return &pbempty.Empty{}, err
 }
 
 // Construct creates a new component resource.
