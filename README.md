@@ -24,8 +24,8 @@ make rebuild-sdk go-install-provider && pulumi -C examples/sample-project/ up
 
 1. Get a sentry account somewhere; free accounts on sentry.io are good enough.
 2. In Sentry, "Organization Settings" -> "Developer Settings" create an
-   "Internal integration" and make sure it has Admin permissions to Project and
-   Team resources.
+   "Internal integration" and make sure it has Admin permissions to Project,
+   Team, and Organization resources.
 3. Generate a token for this integration.
 
 Create a new stack with:

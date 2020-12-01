@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/atlassian/go-sentry-api"
 	"github.com/pulumi/pulumi/pkg/v2/resource/provider"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource/plugin"
@@ -32,7 +33,7 @@ type sentryProvider struct {
 	name    string
 	version string
 
-	sentryClient *SentryClient
+	sentryClient *sentry.Client
 }
 
 func makeProvider(host *provider.HostClient, name, version string) (rpc.ResourceProviderServer, error) {
@@ -90,14 +91,11 @@ func (k *sentryProvider) Configure(ctx context.Context, req *rpc.ConfigureReques
 	vars := req.GetVariables()
 	logger.V(9).Infof("vars %v", vars)
 
+	apiURL := vars["sentry:config:apiURL"]
 	var err error
-	k.sentryClient, err = NewSentryClient(vars["sentry:config:apiURL"], vars["sentry:config:token"])
+	k.sentryClient, err = sentry.NewClient(vars["sentry:config:token"], &apiURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("could not initialize a sentry API client: %v", err)
-	}
-
-	if checkErr := k.sentryClient.Check(ctx); checkErr != nil {
-		return nil, fmt.Errorf("could not communicate with sentry API: %v", checkErr)
 	}
 
 	return &rpc.ConfigureResponse{}, nil
@@ -170,13 +168,18 @@ func (k *sentryProvider) Create(ctx context.Context, req *rpc.CreateRequest) (*r
 
 // Read the current live state associated with a resource.
 func (k *sentryProvider) Read(ctx context.Context, req *rpc.ReadRequest) (*rpc.ReadResponse, error) {
-	urn := resource.URN(req.GetUrn())
-	ty := urn.Type()
-	if ty != "sentry:index:Project" {
-		return nil, fmt.Errorf("Unknown resource type '%s'", ty)
+	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true})
+	if err != nil {
+		return nil, err
 	}
 
-	panic("Read not implemented for 'sentry:index:Project'")
+	urn := resource.URN(req.GetUrn())
+	ty := urn.Type()
+	if ty == "sentry:index:Project" {
+		return k.projectRead(ctx, req, inputs)
+	}
+
+	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 }
 
 // Update updates an existing resource with new values.

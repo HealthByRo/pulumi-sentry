@@ -44,14 +44,23 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 	slug := inputs["slug"].StringValue()
 	teamSlug := inputs["teamSlug"].StringValue()
 
-	if err := k.sentryClient.CreateProject(ctx, organizationSlug, teamSlug, name, slug); err != nil {
-		return nil, fmt.Errorf("could not CreateProject %v: %v", slug, err)
+	organization, err := k.sentryClient.GetOrganization(organizationSlug)
+	if err != nil {
+		return nil, err
+	}
+	team, err := k.sentryClient.GetTeam(organization, teamSlug)
+	if err != nil {
+		return nil, err
 	}
 
+	project, err := k.sentryClient.CreateProject(organization, team, name, &slug)
+	if err != nil {
+		return nil, fmt.Errorf("could not CreateProject %v: %v", slug, err)
+	}
 	outputs := map[string]interface{}{
 		"organizationSlug": organizationSlug,
 		"name":             name,
-		"slug":             slug,
+		"slug":             *project.Slug,
 		"teamSlug":         teamSlug,
 	}
 
@@ -68,10 +77,22 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 	}, nil
 }
 
+func (k *sentryProvider) projectRead(ctx context.Context, req *rpc.ReadRequest, inputs resource.PropertyMap) (*rpc.ReadResponse, error) {
+	panic(inputs)
+}
+
 func (k *sentryProvider) projectDelete(ctx context.Context, req *rpc.DeleteRequest, inputs resource.PropertyMap) (*pbempty.Empty, error) {
 	organizationSlug := inputs["organizationSlug"].StringValue()
+	organization, err := k.sentryClient.GetOrganization(organizationSlug)
+	if err != nil {
+		return nil, err
+	}
 	slug := inputs["slug"].StringValue()
-	err := k.sentryClient.DeleteProject(ctx, organizationSlug, slug)
+	project, err := k.sentryClient.GetProject(organization, slug)
+	if err != nil {
+		return nil, err
+	}
 
+	err = k.sentryClient.DeleteProject(organization, project)
 	return &pbempty.Empty{}, err
 }
