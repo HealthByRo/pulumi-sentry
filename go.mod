@@ -9,4 +9,5 @@ require (
 	github.com/pulumi/pulumi/pkg/v2 v2.14.0
 	github.com/pulumi/pulumi/sdk/v2 v2.14.0
 	github.com/rs/zerolog v1.20.0
+	github.com/stvp/assert v0.0.0-20170616060220-4bc16443988b
 )

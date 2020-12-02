@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# This script is meant to run during CI tests, on a clean checkout.
+
+REPO_ROOT=$(dirname "${BASH_SOURCE[0]}")/../pulumi-sentry
+make -C "$REPO_ROOT" rebuild-sdk
+
+if [ "$(git status --short)" == "" ]; then
+    echo "SDK is consistent with the schema"
+else
+    echo "There are differences between the SDK in the repo and generated based on current schema:"
+    git status
+    git diff
+    exit 1
+fi
