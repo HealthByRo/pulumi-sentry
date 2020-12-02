@@ -110,9 +110,9 @@ func (k *sentryProvider) keyDelete(ctx context.Context, req *rpc.DeleteRequest, 
 	return &pbempty.Empty{}, err
 }
 
-func getClientKey(sentryClient *sentry.Client, organization sentry.Organization, project sentry.Project, localID string) (sentry.Key, error) {
-	// This looks awkward, but the official library does not provide a way to
-	// get a single key.
+func getClientKey(sentryClient sentryClientAPI, organization sentry.Organization, project sentry.Project, localID string) (sentry.Key, error) {
+	// The official library does not provide a way to get a single key.  Get
+	// the full list and choose the right one.
 	keys, err := sentryClient.GetClientKeys(organization, project)
 	if err != nil {
 		return sentry.Key{}, fmt.Errorf("could not GetClientKeys: %v", err)

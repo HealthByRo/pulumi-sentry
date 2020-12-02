@@ -33,7 +33,7 @@ type sentryProvider struct {
 	name    string
 	version string
 
-	sentryClient *sentry.Client
+	sentryClient sentryClientAPI
 }
 
 func makeProvider(host *provider.HostClient, name, version string) (rpc.ResourceProviderServer, error) {
@@ -179,8 +179,11 @@ func (k *sentryProvider) Create(ctx context.Context, req *rpc.CreateRequest) (*r
 func (k *sentryProvider) Read(ctx context.Context, req *rpc.ReadRequest) (*rpc.ReadResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	ty := urn.Type()
-	if ty == "sentry:index:Project" {
+	switch ty {
+	case "sentry:index:Project":
 		return k.projectRead(ctx, req)
+	case "sentry:index:ClientKey":
+		return k.keyRead(ctx, req)
 	}
 
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
