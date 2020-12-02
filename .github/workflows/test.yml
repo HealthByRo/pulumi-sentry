@@ -20,4 +20,7 @@ jobs:
       run: ./ci/test-sdk-is-consistent-with-schema
 
     - name: Run tests
-      run: go test ./...
+      run: make build test
+
+    - name: Lint
+      run: make lint
