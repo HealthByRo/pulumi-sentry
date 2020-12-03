@@ -80,6 +80,61 @@ func TestProjectCheck(t *testing.T) {
 	}
 }
 
+func TestProjectDiff(t *testing.T) {
+	baseOlds := resource.PropertyMap{
+		"name":             resource.NewPropertyValue("base name"),
+		"organizationSlug": resource.NewPropertyValue("base-org-slug"),
+		"slug":             resource.NewPropertyValue("base-slug"),
+		"teamSlug":         resource.NewPropertyValue("base-team-slug"),
+	}
+	tests := map[string]struct {
+		olds, news   resource.PropertyMap
+		wantResponse rpc.DiffResponse
+	}{
+		"no change": {
+			olds:         baseOlds,
+			news:         baseOlds,
+			wantResponse: rpc.DiffResponse{},
+		},
+		"simple updates": {
+			olds: baseOlds,
+			news: resource.PropertyMap{
+				"name":             resource.NewPropertyValue("new name"),
+				"organizationSlug": resource.NewPropertyValue("base-org-slug"),
+				"slug":             resource.NewPropertyValue("new-slug"),
+				"teamSlug":         resource.NewPropertyValue("new-team-slug"),
+			},
+			wantResponse: rpc.DiffResponse{
+				Changes: rpc.DiffResponse_DIFF_SOME,
+				Diffs:   []string{"name", "slug", "teamSlug"},
+			},
+		},
+		"replacement": {
+			olds: baseOlds,
+			news: resource.PropertyMap{
+				"name":             resource.NewPropertyValue("base name"),
+				"organizationSlug": resource.NewPropertyValue("new-org-slug"),
+				"slug":             resource.NewPropertyValue("base-slug"),
+				"teamSlug":         resource.NewPropertyValue("base-team-slug"),
+			},
+			wantResponse: rpc.DiffResponse{
+				Changes:             rpc.DiffResponse_DIFF_SOME,
+				Diffs:               []string{"organizationSlug"},
+				Replaces:            []string{"organizationSlug"},
+				DeleteBeforeReplace: true,
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			prov := sentryProvider{}
+			resp, err := prov.projectDiff(tc.olds, tc.news)
+			assert.Nil(t, err)
+			assert.Equal(t, tc.wantResponse, *resp)
+		})
+	}
+}
+
 func TestProjectCreate(t *testing.T) {
 	ctx := context.Background()
 	createCalled := false

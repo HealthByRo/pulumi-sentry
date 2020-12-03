@@ -46,25 +46,34 @@ func (k *sentryProvider) projectCheck(ctx context.Context, req *rpc.CheckRequest
 }
 
 func (k *sentryProvider) projectDiff(olds, news resource.PropertyMap) (*rpc.DiffResponse, error) {
-	// TODO: be more detailed with Diff results, mind DeleteBeforeReplace,
-
 	d := olds.Diff(news)
 	if d == nil {
 		return &rpc.DiffResponse{}, nil
 	}
 
-	changes := rpc.DiffResponse_DIFF_NONE
-	var replaces []string
-	for _, key := range []resource.PropertyKey{"organizationSlug", "name", "slug", "teamSlug"} {
-		if d.Changed(key) {
-			changes = rpc.DiffResponse_DIFF_SOME
-			replaces = append(replaces, string(key))
+	changeRequiresReplacement := map[string]bool{
+		"organizationSlug": true,
+	}
+	var diffs, replaces []string
+	for _, key := range []string{"organizationSlug", "name", "slug", "teamSlug"} {
+		if d.Changed(resource.PropertyKey(key)) {
+			diffs = append(diffs, key)
+			if changeRequiresReplacement[key] {
+				replaces = append(replaces, key)
+			}
 		}
 	}
 
+	changes := rpc.DiffResponse_DIFF_NONE
+	if len(diffs) > 0 {
+		changes = rpc.DiffResponse_DIFF_SOME
+	}
+
 	return &rpc.DiffResponse{
-		Changes:  changes,
-		Replaces: replaces,
+		Changes:             changes,
+		Diffs:               diffs,
+		Replaces:            replaces,
+		DeleteBeforeReplace: len(replaces) > 0,
 	}, nil
 }
 
