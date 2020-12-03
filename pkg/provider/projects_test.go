@@ -11,16 +11,6 @@ import (
 	"github.com/stvp/assert"
 )
 
-type byProperty []*rpc.CheckFailure
-
-func (s byProperty) Len() int { return len(s) }
-func (s byProperty) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-func (s byProperty) Less(i, j int) bool {
-	return s[i].Property < s[j].Property
-}
-
 func TestProjectCheck(t *testing.T) {
 	tests := map[string]struct {
 		news         resource.PropertyMap
