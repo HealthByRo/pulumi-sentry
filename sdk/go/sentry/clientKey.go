@@ -18,9 +18,9 @@ type ClientKey struct {
 	DsnCSP           pulumi.StringPtrOutput `pulumi:"dsnCSP"`
 	DsnPublic        pulumi.StringPtrOutput `pulumi:"dsnPublic"`
 	DsnSecret        pulumi.StringPtrOutput `pulumi:"dsnSecret"`
-	Name             pulumi.StringOutput    `pulumi:"name"`
-	OrganizationSlug pulumi.StringOutput    `pulumi:"organizationSlug"`
-	ProjectSlug      pulumi.StringOutput    `pulumi:"projectSlug"`
+	Name             pulumi.StringPtrOutput `pulumi:"name"`
+	OrganizationSlug pulumi.StringPtrOutput `pulumi:"organizationSlug"`
+	ProjectSlug      pulumi.StringPtrOutput `pulumi:"projectSlug"`
 	Public           pulumi.StringPtrOutput `pulumi:"public"`
 	Secret           pulumi.StringPtrOutput `pulumi:"secret"`
 }

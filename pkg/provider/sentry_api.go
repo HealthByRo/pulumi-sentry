@@ -60,15 +60,15 @@ func (m *sentryClientMock) CreateClientKey(o sentry.Organization, p sentry.Proje
 }
 
 func (m *sentryClientMock) DeleteClientKey(o sentry.Organization, p sentry.Project, k sentry.Key) error {
-	return m.DeleteClientKey(o, p, k)
+	return m.deleteClientKey(o, p, k)
 }
 
 func (m *sentryClientMock) UpdateClientKey(o sentry.Organization, p sentry.Project, k sentry.Key, name string) (sentry.Key, error) {
-	return m.UpdateClientKey(o, p, k, name)
+	return m.updateClientKey(o, p, k, name)
 }
 
 func (m *sentryClientMock) GetClientKeys(o sentry.Organization, p sentry.Project) ([]sentry.Key, error) {
-	return m.GetClientKeys(o, p)
+	return m.getClientKeys(o, p)
 }
 
 func (m *sentryClientMock) GetOrganization(orgslug string) (sentry.Organization, error) {

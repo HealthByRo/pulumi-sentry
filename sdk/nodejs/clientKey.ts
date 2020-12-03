@@ -35,9 +35,9 @@ export class ClientKey extends pulumi.CustomResource {
     public /*out*/ readonly dsnCSP!: pulumi.Output<string | undefined>;
     public /*out*/ readonly dsnPublic!: pulumi.Output<string | undefined>;
     public /*out*/ readonly dsnSecret!: pulumi.Output<string | undefined>;
-    public readonly name!: pulumi.Output<string>;
-    public readonly organizationSlug!: pulumi.Output<string>;
-    public readonly projectSlug!: pulumi.Output<string>;
+    public readonly name!: pulumi.Output<string | undefined>;
+    public readonly organizationSlug!: pulumi.Output<string | undefined>;
+    public readonly projectSlug!: pulumi.Output<string | undefined>;
     public /*out*/ readonly public!: pulumi.Output<string | undefined>;
     public /*out*/ readonly secret!: pulumi.Output<string | undefined>;
 

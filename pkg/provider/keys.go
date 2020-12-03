@@ -73,29 +73,11 @@ func (k *sentryProvider) keyCreate(ctx context.Context, req *rpc.CreateRequest, 
 	projectSlug := inputs["projectSlug"].StringValue()
 	name := inputs["name"].StringValue()
 
-	organization, err := k.sentryClient.GetOrganization(organizationSlug)
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve Organization %#v: %v", organizationSlug, err)
-	}
-	project, err := k.sentryClient.GetProject(organization, projectSlug)
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve Project %#v: %v", projectSlug, err)
-	}
-	key, err := k.sentryClient.CreateClientKey(organization, project, name)
+	key, err := k.sentryClient.CreateClientKey(sentry.Organization{Slug: &organizationSlug}, sentry.Project{Slug: &projectSlug}, name)
 	if err != nil {
 		return nil, fmt.Errorf("could not CreateClientKey %v: %v", name, err)
 	}
-	outputs := map[string]interface{}{
-		"organizationSlug": organizationSlug,
-		"name":             name,
-		"projectSlug":      projectSlug,
-		"dsnSecret":        key.DSN.Secret,
-		"dsnCSP":           key.DSN.CSP,
-		"dsnPublic":        key.DSN.Public,
-		"secret":           key.Secret,
-		"public":           key.Public,
-		"dateCreated":      key.DateCreated.Format(time.RFC3339),
-	}
+	outputs := outputsFromKey(key)
 	outputProperties, err := plugin.MarshalProperties(
 		resource.NewPropertyMapFromMap(outputs),
 		plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true},
@@ -113,7 +95,31 @@ func (k *sentryProvider) keyRead(ctx context.Context, req *rpc.ReadRequest) (*rp
 	urn := resource.URN(req.GetUrn())
 	label := fmt.Sprintf("%s.Read(%s)", k.label(), urn)
 	logger.V(9).Infof("%s executing", label)
-	panic("not implemented")
+
+	id := req.GetId()
+	organizationSlug, projectSlug, localID, err := parseKeyID(req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	key, err := getClientKey(k.sentryClient, sentry.Organization{Slug: &organizationSlug}, sentry.Project{Slug: &projectSlug}, localID)
+	if err != nil {
+		return nil, err
+	}
+	if key.ID == "" {
+		// The key was not found, delete it from stack state.
+		return &rpc.ReadResponse{}, nil
+	}
+	properties := resource.NewPropertyMapFromMap(outputsFromKey(key))
+	state, err := plugin.MarshalProperties(properties, plugin.MarshalOptions{
+		Label: label + ".state", KeepUnknowns: true, SkipNulls: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &rpc.ReadResponse{
+		Id:         id,
+		Properties: state,
+	}, nil
 }
 
 func (k *sentryProvider) keyDelete(ctx context.Context, req *rpc.DeleteRequest) (*pbempty.Empty, error) {
@@ -121,19 +127,11 @@ func (k *sentryProvider) keyDelete(ctx context.Context, req *rpc.DeleteRequest) 
 	if err != nil {
 		return &pbempty.Empty{}, err
 	}
-	organization, err := k.sentryClient.GetOrganization(organizationSlug)
-	if err != nil {
-		return nil, err
-	}
-	project, err := k.sentryClient.GetProject(organization, projectSlug)
-	if err != nil {
-		return nil, err
-	}
-	key, err := getClientKey(k.sentryClient, organization, project, localID)
-	if err != nil {
-		return nil, err
-	}
-	err = k.sentryClient.DeleteClientKey(organization, project, key)
+	err = k.sentryClient.DeleteClientKey(
+		sentry.Organization{Slug: &organizationSlug},
+		sentry.Project{Slug: &projectSlug},
+		sentry.Key{ID: localID},
+	)
 	return &pbempty.Empty{}, err
 }
 
@@ -149,7 +147,7 @@ func getClientKey(sentryClient sentryClientAPI, organization sentry.Organization
 			return key, nil
 		}
 	}
-	return sentry.Key{}, fmt.Errorf("could not find a ClientKey matching %#v", localID)
+	return sentry.Key{}, nil
 }
 
 func buildKeyID(organizationSlug, slug, localID string) string {
@@ -162,4 +160,16 @@ func parseKeyID(id string) (organizationSlug, projectSlug, localID string, err e
 		return "", "", "", fmt.Errorf("invalid ID: %s", id)
 	}
 	return parts[0], parts[1], parts[2], nil
+}
+
+func outputsFromKey(key sentry.Key) map[string]interface{} {
+	return map[string]interface{}{
+		"name":        key.Label,
+		"dsnSecret":   key.DSN.Secret,
+		"dsnCSP":      key.DSN.CSP,
+		"dsnPublic":   key.DSN.Public,
+		"secret":      key.Secret,
+		"public":      key.Public,
+		"dateCreated": key.DateCreated.Format(time.RFC3339),
+	}
 }

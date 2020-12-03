@@ -24,13 +24,13 @@ namespace Pulumi.Sentry
         public Output<string?> DsnSecret { get; private set; } = null!;
 
         [Output("name")]
-        public Output<string> Name { get; private set; } = null!;
+        public Output<string?> Name { get; private set; } = null!;
 
         [Output("organizationSlug")]
-        public Output<string> OrganizationSlug { get; private set; } = null!;
+        public Output<string?> OrganizationSlug { get; private set; } = null!;
 
         [Output("projectSlug")]
-        public Output<string> ProjectSlug { get; private set; } = null!;
+        public Output<string?> ProjectSlug { get; private set; } = null!;
 
         [Output("public")]
         public Output<string?> Public { get; private set; } = null!;

@@ -106,17 +106,17 @@ class ClientKey(pulumi.CustomResource):
 
     @property
     @pulumi.getter
-    def name(self) -> pulumi.Output[str]:
+    def name(self) -> pulumi.Output[Optional[str]]:
         return pulumi.get(self, "name")
 
     @property
     @pulumi.getter(name="organizationSlug")
-    def organization_slug(self) -> pulumi.Output[str]:
+    def organization_slug(self) -> pulumi.Output[Optional[str]]:
         return pulumi.get(self, "organization_slug")
 
     @property
     @pulumi.getter(name="projectSlug")
-    def project_slug(self) -> pulumi.Output[str]:
+    def project_slug(self) -> pulumi.Output[Optional[str]]:
         return pulumi.get(self, "project_slug")
 
     @property

@@ -64,12 +64,6 @@
                 "name": {
                     "type": "string"
                 },
-                "organizationSlug": {
-                    "type": "string"
-                },
-                "projectSlug": {
-                    "type": "string"
-                },
                 "dsnSecret": {
                     "type": "string",
                     "secret": true
@@ -91,11 +85,7 @@
                     "type": "string"
                 }
             },
-            "required": [
-                "name",
-                "organizationSlug",
-                "projectSlug"
-            ]
+            "required": []
         }
     },
     "language": {
