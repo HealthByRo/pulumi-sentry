@@ -11,17 +11,20 @@ namespace Pulumi.Sentry
 {
     public partial class Project : Pulumi.CustomResource
     {
+        [Output("defaultClientKeyDSNPublic")]
+        public Output<string?> DefaultClientKeyDSNPublic { get; private set; } = null!;
+
         [Output("name")]
         public Output<string> Name { get; private set; } = null!;
 
         [Output("organizationSlug")]
-        public Output<string> OrganizationSlug { get; private set; } = null!;
+        public Output<string?> OrganizationSlug { get; private set; } = null!;
 
         [Output("slug")]
-        public Output<string?> Slug { get; private set; } = null!;
+        public Output<string> Slug { get; private set; } = null!;
 
         [Output("teamSlug")]
-        public Output<string> TeamSlug { get; private set; } = null!;
+        public Output<string?> TeamSlug { get; private set; } = null!;
 
 
         /// <summary>
@@ -74,8 +77,8 @@ namespace Pulumi.Sentry
         [Input("organizationSlug", required: true)]
         public Input<string> OrganizationSlug { get; set; } = null!;
 
-        [Input("slug")]
-        public Input<string>? Slug { get; set; }
+        [Input("slug", required: true)]
+        public Input<string> Slug { get; set; } = null!;
 
         [Input("teamSlug", required: true)]
         public Input<string> TeamSlug { get; set; } = null!;

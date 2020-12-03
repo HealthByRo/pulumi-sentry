@@ -7,6 +7,7 @@ import (
 
 	"github.com/atlassian/go-sentry-api"
 	pbempty "github.com/golang/protobuf/ptypes/empty"
+	"github.com/pkg/errors"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource/plugin"
 	logger "github.com/pulumi/pulumi/sdk/v2/go/common/util/logging"
@@ -14,30 +15,65 @@ import (
 )
 
 func (k *sentryProvider) projectCheck(ctx context.Context, req *rpc.CheckRequest) (*rpc.CheckResponse, error) {
-	// TODO: validate the slug
-	return &rpc.CheckResponse{Inputs: req.News, Failures: nil}, nil
+	urn := resource.URN(req.GetUrn())
+	label := fmt.Sprintf("%s.Check(%s)", k.label(), urn)
+	logger.V(9).Infof("%s executing", label)
+
+	news, err := plugin.UnmarshalProperties(req.GetNews(), plugin.MarshalOptions{
+		Label:        fmt.Sprintf("%s.news", label),
+		KeepUnknowns: true,
+		SkipNulls:    true,
+		RejectAssets: true,
+		KeepSecrets:  true,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "check failed because malformed resource inputs")
+	}
+
+	var failures []*rpc.CheckFailure
+	for _, key := range []string{"organizationSlug", "name", "slug", "teamSlug"} {
+		value := news[resource.PropertyKey(key)]
+		if !isNonEmptyString(value) {
+			failures = append(failures, &rpc.CheckFailure{
+				Property: key,
+				Reason:   "this input must be a non-empty string",
+			})
+			continue
+		}
+	}
+
+	return &rpc.CheckResponse{Inputs: req.News, Failures: failures}, nil
 }
 
 func (k *sentryProvider) projectDiff(olds, news resource.PropertyMap) (*rpc.DiffResponse, error) {
-	// TODO: be more detailed with Diff results, mind DeleteBeforeReplace,
-
 	d := olds.Diff(news)
 	if d == nil {
 		return &rpc.DiffResponse{}, nil
 	}
 
-	changes := rpc.DiffResponse_DIFF_NONE
-	var replaces []string
-	for _, key := range []resource.PropertyKey{"organizationSlug", "name", "slug", "teamSlug"} {
-		if d.Changed(key) {
-			changes = rpc.DiffResponse_DIFF_SOME
-			replaces = append(replaces, string(key))
+	changeRequiresReplacement := map[string]bool{
+		"organizationSlug": true,
+	}
+	var diffs, replaces []string
+	for _, key := range []string{"organizationSlug", "name", "slug", "teamSlug"} {
+		if d.Changed(resource.PropertyKey(key)) {
+			diffs = append(diffs, key)
+			if changeRequiresReplacement[key] {
+				replaces = append(replaces, key)
+			}
 		}
 	}
 
+	changes := rpc.DiffResponse_DIFF_NONE
+	if len(diffs) > 0 {
+		changes = rpc.DiffResponse_DIFF_SOME
+	}
+
 	return &rpc.DiffResponse{
-		Changes:  changes,
-		Replaces: replaces,
+		Changes:             changes,
+		Diffs:               diffs,
+		Replaces:            replaces,
+		DeleteBeforeReplace: len(replaces) > 0,
 	}, nil
 }
 
@@ -47,24 +83,22 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 	slug := inputs["slug"].StringValue()
 	teamSlug := inputs["teamSlug"].StringValue()
 
-	organization, err := k.sentryClient.GetOrganization(organizationSlug)
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve Organization %#v: %v", organizationSlug, err)
-	}
-	team, err := k.sentryClient.GetTeam(organization, teamSlug)
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve Team: %v", err)
-	}
-
-	project, err := k.sentryClient.CreateProject(organization, team, name, &slug)
+	org := sentry.Organization{Slug: &organizationSlug}
+	project, err := k.sentryClient.CreateProject(org, sentry.Team{Slug: &teamSlug}, name, &slug)
 	if err != nil {
 		return nil, fmt.Errorf("could not CreateProject %v: %v", slug, err)
 	}
+	defaultKey, err := getDefaultClientKey(k.sentryClient, organizationSlug, slug)
+	if err != nil {
+		return nil, fmt.Errorf("could not get default ClientKey for %v: %v", slug, err)
+	}
+
 	outputs := map[string]interface{}{
-		"organizationSlug": organizationSlug,
-		"name":             name,
-		"slug":             *project.Slug,
-		"teamSlug":         teamSlug,
+		"organizationSlug":          organizationSlug,
+		"name":                      project.Name,
+		"slug":                      *project.Slug,
+		"teamSlug":                  teamSlug,
+		"defaultClientKeyDSNPublic": defaultKey.DSN.Public,
 	}
 
 	outputProperties, err := plugin.MarshalProperties(
@@ -75,7 +109,7 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 		return nil, err
 	}
 	return &rpc.CreateResponse{
-		Id:         buildProjectID(organizationSlug, slug),
+		Id:         buildProjectID(organizationSlug, *project.Slug),
 		Properties: outputProperties,
 	}, nil
 }
@@ -90,11 +124,7 @@ func (k *sentryProvider) projectRead(ctx context.Context, req *rpc.ReadRequest) 
 	if err != nil {
 		return nil, err
 	}
-	organization, err := k.sentryClient.GetOrganization(organizationSlug)
-	if err != nil {
-		return nil, err
-	}
-	project, err := k.sentryClient.GetProject(organization, slug)
+	project, err := k.sentryClient.GetProject(sentry.Organization{Slug: &organizationSlug}, slug)
 	if err != nil {
 		if apiError, ok := err.(*sentry.APIError); ok {
 			if apiError.StatusCode == 404 {
@@ -105,11 +135,16 @@ func (k *sentryProvider) projectRead(ctx context.Context, req *rpc.ReadRequest) 
 		}
 		return nil, err
 	}
+	defaultKey, err := getDefaultClientKey(k.sentryClient, organizationSlug, slug)
+	if err != nil {
+		return nil, fmt.Errorf("could not get default ClientKey for %v: %v", slug, err)
+	}
 	properties := resource.NewPropertyMapFromMap(map[string]interface{}{
-		"organizationSlug": *project.Organization.Slug,
-		"name":             project.Name,
-		"slug":             *project.Slug,
-		"teamSlug":         *project.Team.Slug,
+		"organizationSlug":          organizationSlug,
+		"name":                      project.Name,
+		"slug":                      *project.Slug,
+		"teamSlug":                  *project.Team.Slug,
+		"defaultClientKeyDSNPublic": defaultKey.DSN.Public,
 	})
 	state, err := plugin.MarshalProperties(properties, plugin.MarshalOptions{
 		Label: label + ".state", KeepUnknowns: true, SkipNulls: true,
@@ -117,23 +152,18 @@ func (k *sentryProvider) projectRead(ctx context.Context, req *rpc.ReadRequest) 
 	if err != nil {
 		return nil, err
 	}
-	return &rpc.ReadResponse{Id: id, Properties: state}, nil
+	return &rpc.ReadResponse{
+		Id:         buildProjectID(organizationSlug, *project.Slug),
+		Properties: state,
+	}, nil
 }
 
-func (k *sentryProvider) projectDelete(ctx context.Context, req *rpc.DeleteRequest, inputs resource.PropertyMap) (*pbempty.Empty, error) {
+func (k *sentryProvider) projectDelete(ctx context.Context, req *rpc.DeleteRequest) (*pbempty.Empty, error) {
 	organizationSlug, slug, err := parseProjectID(req.GetId())
 	if err != nil {
 		return &pbempty.Empty{}, err
 	}
-	organization, err := k.sentryClient.GetOrganization(organizationSlug)
-	if err != nil {
-		return nil, err
-	}
-	project, err := k.sentryClient.GetProject(organization, slug)
-	if err != nil {
-		return nil, err
-	}
-	err = k.sentryClient.DeleteProject(organization, project)
+	err = k.sentryClient.DeleteProject(sentry.Organization{Slug: &organizationSlug}, sentry.Project{Slug: &slug})
 	return &pbempty.Empty{}, err
 }
 
@@ -147,4 +177,22 @@ func parseProjectID(id string) (organizationSlug, slug string, err error) {
 		return "", "", fmt.Errorf("invalid ID: %s", id)
 	}
 	return parts[0], parts[1], nil
+}
+
+func getDefaultClientKey(sentryClient sentryClientAPI, organizationSlug, slug string) (sentry.Key, error) {
+	keys, err := sentryClient.GetClientKeys(
+		sentry.Organization{Slug: &organizationSlug},
+		sentry.Project{Slug: &slug},
+	)
+	if err != nil {
+		return sentry.Key{}, err
+	}
+
+	for _, key := range keys {
+		if key.Label == "Default" {
+			return key, nil
+		}
+	}
+
+	return sentry.Key{}, nil
 }

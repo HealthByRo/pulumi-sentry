@@ -3,3 +3,4 @@
 Pulumi.*.yaml
 yarn.lock
 .vscode
+dist

@@ -50,10 +50,13 @@ class Project(pulumi.CustomResource):
             if organization_slug is None:
                 raise TypeError("Missing required property 'organization_slug'")
             __props__['organization_slug'] = organization_slug
+            if slug is None:
+                raise TypeError("Missing required property 'slug'")
             __props__['slug'] = slug
             if team_slug is None:
                 raise TypeError("Missing required property 'team_slug'")
             __props__['team_slug'] = team_slug
+            __props__['default_client_key_dsn_public'] = None
         super(Project, __self__).__init__(
             'sentry:index:Project',
             resource_name,
@@ -79,23 +82,28 @@ class Project(pulumi.CustomResource):
         return Project(resource_name, opts=opts, __props__=__props__)
 
     @property
+    @pulumi.getter(name="defaultClientKeyDSNPublic")
+    def default_client_key_dsn_public(self) -> pulumi.Output[Optional[str]]:
+        return pulumi.get(self, "default_client_key_dsn_public")
+
+    @property
     @pulumi.getter
     def name(self) -> pulumi.Output[str]:
         return pulumi.get(self, "name")
 
     @property
     @pulumi.getter(name="organizationSlug")
-    def organization_slug(self) -> pulumi.Output[str]:
+    def organization_slug(self) -> pulumi.Output[Optional[str]]:
         return pulumi.get(self, "organization_slug")
 
     @property
     @pulumi.getter
-    def slug(self) -> pulumi.Output[Optional[str]]:
+    def slug(self) -> pulumi.Output[str]:
         return pulumi.get(self, "slug")
 
     @property
     @pulumi.getter(name="teamSlug")
-    def team_slug(self) -> pulumi.Output[str]:
+    def team_slug(self) -> pulumi.Output[Optional[str]]:
         return pulumi.get(self, "team_slug")
 
     def translate_output_property(self, prop):

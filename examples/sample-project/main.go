@@ -34,30 +34,14 @@ func createProjects(ctx *pulumi.Context) error {
 		}
 		ctx.Export("sentry-project-name", projectOutput.Name)
 		ctx.Export("sentry-project-slug", projectOutput.Slug)
-
-		keyOutput, err := sentry.NewClientKey(ctx, "testing-client-key", &sentry.ClientKeyArgs{
-			Name:             pulumi.String("the-name"),
-			OrganizationSlug: pulumi.String(orgSlug),
-			ProjectSlug: projectOutput.Slug.ApplyString(func(slugValue *string) string {
-				return *slugValue
-			}),
-		})
-		if err != nil {
-			return err
-		}
-		ctx.Export("sentry-client-key-name", keyOutput.Name)
-		ctx.Export("sentry-client-key-dsn-public", keyOutput.DsnPublic)
-		ctx.Export("sentry-client-key-dsn-secret", keyOutput.DsnSecret)
-		ctx.Export("sentry-client-key-public", keyOutput.Public)
-		ctx.Export("sentry-client-key-secret", keyOutput.Secret)
+		ctx.Export("sentry-project-default-client-key-dsn-public", projectOutput.DefaultClientKeyDSNPublic)
 	}
 
 	return nil
 }
 
 func getenvWithDefault(name, dflt string) string {
-	ret := os.Getenv(name)
-	if ret != "" {
+	if ret, ok := os.LookupEnv(name); ok {
 		return ret
 	}
 	return dflt

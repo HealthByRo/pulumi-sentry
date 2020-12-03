@@ -13,7 +13,6 @@
         "strict": true
     },
     "files": [
-        "clientKey.ts",
         "index.ts",
         "project.ts",
         "provider.ts",

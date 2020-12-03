@@ -33,7 +33,7 @@ type sentryProvider struct {
 	name    string
 	version string
 
-	sentryClient *sentry.Client
+	sentryClient sentryClientAPI
 }
 
 func makeProvider(host *provider.HostClient, name, version string) (rpc.ResourceProviderServer, error) {
@@ -126,8 +126,6 @@ func (k *sentryProvider) Check(ctx context.Context, req *rpc.CheckRequest) (*rpc
 	switch ty {
 	case "sentry:index:Project":
 		return k.projectCheck(ctx, req)
-	case "sentry:index:ClientKey":
-		return k.keyCheck(ctx, req)
 	}
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 }
@@ -150,8 +148,6 @@ func (k *sentryProvider) Diff(ctx context.Context, req *rpc.DiffRequest) (*rpc.D
 	switch ty {
 	case "sentry:index:Project":
 		return k.projectDiff(olds, news)
-	case "sentry:index:ClientKey":
-		return k.keyDiff(olds, news)
 	}
 
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
@@ -169,8 +165,6 @@ func (k *sentryProvider) Create(ctx context.Context, req *rpc.CreateRequest) (*r
 	switch ty {
 	case "sentry:index:Project":
 		return k.projectCreate(ctx, req, inputs)
-	case "sentry:index:ClientKey":
-		return k.keyCreate(ctx, req, inputs)
 	}
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 }
@@ -179,7 +173,8 @@ func (k *sentryProvider) Create(ctx context.Context, req *rpc.CreateRequest) (*r
 func (k *sentryProvider) Read(ctx context.Context, req *rpc.ReadRequest) (*rpc.ReadResponse, error) {
 	urn := resource.URN(req.GetUrn())
 	ty := urn.Type()
-	if ty == "sentry:index:Project" {
+	switch ty {
+	case "sentry:index:Project":
 		return k.projectRead(ctx, req)
 	}
 
@@ -194,8 +189,6 @@ func (k *sentryProvider) Update(ctx context.Context, req *rpc.UpdateRequest) (*r
 	switch ty {
 	case "sentry:index:Project":
 		panic("Update not implemented for sentry:index:Project")
-	case "sentry:index:ClientKey":
-		panic("Update not implemented for sentry:index:ClientKey")
 	}
 
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
@@ -204,18 +197,11 @@ func (k *sentryProvider) Update(ctx context.Context, req *rpc.UpdateRequest) (*r
 // Delete tears down an existing resource with the given ID.  If it fails, the resource is assumed
 // to still exist.
 func (k *sentryProvider) Delete(ctx context.Context, req *rpc.DeleteRequest) (*pbempty.Empty, error) {
-	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true})
-	if err != nil {
-		return nil, err
-	}
-
 	urn := resource.URN(req.GetUrn())
 	ty := urn.Type()
 	switch ty {
 	case "sentry:index:Project":
-		return k.projectDelete(ctx, req, inputs)
-	case "sentry:index:ClientKey":
-		return k.keyDelete(ctx, req, inputs)
+		return k.projectDelete(ctx, req)
 	}
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 
