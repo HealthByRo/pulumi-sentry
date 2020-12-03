@@ -102,8 +102,10 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 	}
 
 	outputs := map[string]interface{}{
+		"organizationSlug":          organizationSlug,
 		"name":                      project.Name,
 		"slug":                      *project.Slug,
+		"teamSlug":                  teamSlug,
 		"defaultClientKeyDSNPublic": defaultKey.DSN.Public,
 	}
 

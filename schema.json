@@ -33,13 +33,16 @@
                 "slug": {
                     "type": "string"
                 },
+                "teamSlug": {
+                    "type": "string"
+                },
                 "defaultClientKeyDSNPublic": {
                     "type": "string"
                 }
             },
             "required": [
-                "organizationSlug",
-                "name"
+                "name",
+                "slug"
             ]
         }
     },

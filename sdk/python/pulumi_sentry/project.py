@@ -93,13 +93,18 @@ class Project(pulumi.CustomResource):
 
     @property
     @pulumi.getter(name="organizationSlug")
-    def organization_slug(self) -> pulumi.Output[str]:
+    def organization_slug(self) -> pulumi.Output[Optional[str]]:
         return pulumi.get(self, "organization_slug")
 
     @property
     @pulumi.getter
-    def slug(self) -> pulumi.Output[Optional[str]]:
+    def slug(self) -> pulumi.Output[str]:
         return pulumi.get(self, "slug")
+
+    @property
+    @pulumi.getter(name="teamSlug")
+    def team_slug(self) -> pulumi.Output[Optional[str]]:
+        return pulumi.get(self, "team_slug")
 
     def translate_output_property(self, prop):
         return _tables.CAMEL_TO_SNAKE_CASE_TABLE.get(prop) or prop

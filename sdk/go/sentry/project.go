@@ -16,8 +16,9 @@ type Project struct {
 
 	DefaultClientKeyDSNPublic pulumi.StringPtrOutput `pulumi:"defaultClientKeyDSNPublic"`
 	Name                      pulumi.StringOutput    `pulumi:"name"`
-	OrganizationSlug          pulumi.StringOutput    `pulumi:"organizationSlug"`
-	Slug                      pulumi.StringPtrOutput `pulumi:"slug"`
+	OrganizationSlug          pulumi.StringPtrOutput `pulumi:"organizationSlug"`
+	Slug                      pulumi.StringOutput    `pulumi:"slug"`
+	TeamSlug                  pulumi.StringPtrOutput `pulumi:"teamSlug"`
 }
 
 // NewProject registers a new resource with the given unique name, arguments, and options.
@@ -64,6 +65,7 @@ type projectState struct {
 	Name                      *string `pulumi:"name"`
 	OrganizationSlug          *string `pulumi:"organizationSlug"`
 	Slug                      *string `pulumi:"slug"`
+	TeamSlug                  *string `pulumi:"teamSlug"`
 }
 
 type ProjectState struct {
@@ -71,6 +73,7 @@ type ProjectState struct {
 	Name                      pulumi.StringPtrInput
 	OrganizationSlug          pulumi.StringPtrInput
 	Slug                      pulumi.StringPtrInput
+	TeamSlug                  pulumi.StringPtrInput
 }
 
 func (ProjectState) ElementType() reflect.Type {

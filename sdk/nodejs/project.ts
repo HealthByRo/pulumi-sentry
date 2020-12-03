@@ -33,8 +33,9 @@ export class Project extends pulumi.CustomResource {
 
     public /*out*/ readonly defaultClientKeyDSNPublic!: pulumi.Output<string | undefined>;
     public readonly name!: pulumi.Output<string>;
-    public readonly organizationSlug!: pulumi.Output<string>;
-    public readonly slug!: pulumi.Output<string | undefined>;
+    public readonly organizationSlug!: pulumi.Output<string | undefined>;
+    public readonly slug!: pulumi.Output<string>;
+    public readonly teamSlug!: pulumi.Output<string | undefined>;
 
     /**
      * Create a Project resource with the given unique name, arguments, and options.
@@ -68,6 +69,7 @@ export class Project extends pulumi.CustomResource {
             inputs["name"] = undefined /*out*/;
             inputs["organizationSlug"] = undefined /*out*/;
             inputs["slug"] = undefined /*out*/;
+            inputs["teamSlug"] = undefined /*out*/;
         }
         if (!opts) {
             opts = {}

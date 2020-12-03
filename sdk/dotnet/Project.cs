@@ -18,10 +18,13 @@ namespace Pulumi.Sentry
         public Output<string> Name { get; private set; } = null!;
 
         [Output("organizationSlug")]
-        public Output<string> OrganizationSlug { get; private set; } = null!;
+        public Output<string?> OrganizationSlug { get; private set; } = null!;
 
         [Output("slug")]
-        public Output<string?> Slug { get; private set; } = null!;
+        public Output<string> Slug { get; private set; } = null!;
+
+        [Output("teamSlug")]
+        public Output<string?> TeamSlug { get; private set; } = null!;
 
 
         /// <summary>
