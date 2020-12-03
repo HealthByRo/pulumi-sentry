@@ -4,13 +4,22 @@
     "resources": {
         "sentry:index:Project": {
             "inputProperties": {
-                "organizationSlug": {
+                "defaultEnvironment": {
                     "type": "string"
                 },
                 "name": {
                     "type": "string"
                 },
+                "organizationSlug": {
+                    "type": "string"
+                },
                 "slug": {
+                    "type": "string"
+                },
+                "subjectPrefix": {
+                    "type": "string"
+                },
+                "subjectTemplate": {
                     "type": "string"
                 },
                 "teamSlug": {
@@ -24,6 +33,12 @@
                 "teamSlug"
             ],
             "properties": {
+                "defaultClientKeyDSNPublic": {
+                    "type": "string"
+                },
+                "defaultEnvironment": {
+                    "type": "string"
+                },
                 "organizationSlug": {
                     "type": "string"
                 },
@@ -33,10 +48,13 @@
                 "slug": {
                     "type": "string"
                 },
-                "teamSlug": {
+                "subjectPrefix": {
                     "type": "string"
                 },
-                "defaultClientKeyDSNPublic": {
+                "subjectTemplate": {
+                    "type": "string"
+                },
+                "teamSlug": {
                     "type": "string"
                 }
             },

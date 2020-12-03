@@ -32,9 +32,12 @@ export class Project extends pulumi.CustomResource {
     }
 
     public /*out*/ readonly defaultClientKeyDSNPublic!: pulumi.Output<string | undefined>;
+    public readonly defaultEnvironment!: pulumi.Output<string | undefined>;
     public readonly name!: pulumi.Output<string>;
     public readonly organizationSlug!: pulumi.Output<string | undefined>;
     public readonly slug!: pulumi.Output<string>;
+    public readonly subjectPrefix!: pulumi.Output<string | undefined>;
+    public readonly subjectTemplate!: pulumi.Output<string | undefined>;
     public readonly teamSlug!: pulumi.Output<string | undefined>;
 
     /**
@@ -59,16 +62,22 @@ export class Project extends pulumi.CustomResource {
             if (!args || args.teamSlug === undefined) {
                 throw new Error("Missing required property 'teamSlug'");
             }
+            inputs["defaultEnvironment"] = args ? args.defaultEnvironment : undefined;
             inputs["name"] = args ? args.name : undefined;
             inputs["organizationSlug"] = args ? args.organizationSlug : undefined;
             inputs["slug"] = args ? args.slug : undefined;
+            inputs["subjectPrefix"] = args ? args.subjectPrefix : undefined;
+            inputs["subjectTemplate"] = args ? args.subjectTemplate : undefined;
             inputs["teamSlug"] = args ? args.teamSlug : undefined;
             inputs["defaultClientKeyDSNPublic"] = undefined /*out*/;
         } else {
             inputs["defaultClientKeyDSNPublic"] = undefined /*out*/;
+            inputs["defaultEnvironment"] = undefined /*out*/;
             inputs["name"] = undefined /*out*/;
             inputs["organizationSlug"] = undefined /*out*/;
             inputs["slug"] = undefined /*out*/;
+            inputs["subjectPrefix"] = undefined /*out*/;
+            inputs["subjectTemplate"] = undefined /*out*/;
             inputs["teamSlug"] = undefined /*out*/;
         }
         if (!opts) {
@@ -86,8 +95,11 @@ export class Project extends pulumi.CustomResource {
  * The set of arguments for constructing a Project resource.
  */
 export interface ProjectArgs {
+    readonly defaultEnvironment?: pulumi.Input<string>;
     readonly name: pulumi.Input<string>;
     readonly organizationSlug: pulumi.Input<string>;
     readonly slug: pulumi.Input<string>;
+    readonly subjectPrefix?: pulumi.Input<string>;
+    readonly subjectTemplate?: pulumi.Input<string>;
     readonly teamSlug: pulumi.Input<string>;
 }

@@ -45,3 +45,14 @@ func mustUnmarshalProperties(mprops *structpb.Struct) resource.PropertyMap {
 func stringPtr(value string) *string {
 	return &value
 }
+
+func propertyMapWithOverrides(source resource.PropertyMap, overrides resource.PropertyMap) resource.PropertyMap {
+	ret := resource.PropertyMap{}
+	for k, v := range source {
+		ret[k] = v
+	}
+	for k, v := range overrides {
+		ret[k] = v
+	}
+	return ret
+}

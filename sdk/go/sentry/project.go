@@ -15,9 +15,12 @@ type Project struct {
 	pulumi.CustomResourceState
 
 	DefaultClientKeyDSNPublic pulumi.StringPtrOutput `pulumi:"defaultClientKeyDSNPublic"`
+	DefaultEnvironment        pulumi.StringPtrOutput `pulumi:"defaultEnvironment"`
 	Name                      pulumi.StringOutput    `pulumi:"name"`
 	OrganizationSlug          pulumi.StringPtrOutput `pulumi:"organizationSlug"`
 	Slug                      pulumi.StringOutput    `pulumi:"slug"`
+	SubjectPrefix             pulumi.StringPtrOutput `pulumi:"subjectPrefix"`
+	SubjectTemplate           pulumi.StringPtrOutput `pulumi:"subjectTemplate"`
 	TeamSlug                  pulumi.StringPtrOutput `pulumi:"teamSlug"`
 }
 
@@ -62,17 +65,23 @@ func GetProject(ctx *pulumi.Context,
 // Input properties used for looking up and filtering Project resources.
 type projectState struct {
 	DefaultClientKeyDSNPublic *string `pulumi:"defaultClientKeyDSNPublic"`
+	DefaultEnvironment        *string `pulumi:"defaultEnvironment"`
 	Name                      *string `pulumi:"name"`
 	OrganizationSlug          *string `pulumi:"organizationSlug"`
 	Slug                      *string `pulumi:"slug"`
+	SubjectPrefix             *string `pulumi:"subjectPrefix"`
+	SubjectTemplate           *string `pulumi:"subjectTemplate"`
 	TeamSlug                  *string `pulumi:"teamSlug"`
 }
 
 type ProjectState struct {
 	DefaultClientKeyDSNPublic pulumi.StringPtrInput
+	DefaultEnvironment        pulumi.StringPtrInput
 	Name                      pulumi.StringPtrInput
 	OrganizationSlug          pulumi.StringPtrInput
 	Slug                      pulumi.StringPtrInput
+	SubjectPrefix             pulumi.StringPtrInput
+	SubjectTemplate           pulumi.StringPtrInput
 	TeamSlug                  pulumi.StringPtrInput
 }
 
@@ -81,18 +90,24 @@ func (ProjectState) ElementType() reflect.Type {
 }
 
 type projectArgs struct {
-	Name             string `pulumi:"name"`
-	OrganizationSlug string `pulumi:"organizationSlug"`
-	Slug             string `pulumi:"slug"`
-	TeamSlug         string `pulumi:"teamSlug"`
+	DefaultEnvironment *string `pulumi:"defaultEnvironment"`
+	Name               string  `pulumi:"name"`
+	OrganizationSlug   string  `pulumi:"organizationSlug"`
+	Slug               string  `pulumi:"slug"`
+	SubjectPrefix      *string `pulumi:"subjectPrefix"`
+	SubjectTemplate    *string `pulumi:"subjectTemplate"`
+	TeamSlug           string  `pulumi:"teamSlug"`
 }
 
 // The set of arguments for constructing a Project resource.
 type ProjectArgs struct {
-	Name             pulumi.StringInput
-	OrganizationSlug pulumi.StringInput
-	Slug             pulumi.StringInput
-	TeamSlug         pulumi.StringInput
+	DefaultEnvironment pulumi.StringPtrInput
+	Name               pulumi.StringInput
+	OrganizationSlug   pulumi.StringInput
+	Slug               pulumi.StringInput
+	SubjectPrefix      pulumi.StringPtrInput
+	SubjectTemplate    pulumi.StringPtrInput
+	TeamSlug           pulumi.StringInput
 }
 
 func (ProjectArgs) ElementType() reflect.Type {
