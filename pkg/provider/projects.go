@@ -88,17 +88,9 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 	if err != nil {
 		return nil, fmt.Errorf("could not CreateProject %v: %v", slug, err)
 	}
-	keys, err := k.sentryClient.GetClientKeys(org, project)
+	defaultKey, err := getDefaultClientKey(k.sentryClient, organizationSlug, slug)
 	if err != nil {
-		return nil, fmt.Errorf("could not GetClientKeys: %v", err)
-	}
-
-	var defaultKey sentry.Key
-	for _, key := range keys {
-		if key.Label == "Default" {
-			defaultKey = key
-			break
-		}
+		return nil, fmt.Errorf("could not get default ClientKey for %v: %v", slug, err)
 	}
 
 	outputs := map[string]interface{}{
@@ -143,10 +135,16 @@ func (k *sentryProvider) projectRead(ctx context.Context, req *rpc.ReadRequest) 
 		}
 		return nil, err
 	}
+	defaultKey, err := getDefaultClientKey(k.sentryClient, organizationSlug, slug)
+	if err != nil {
+		return nil, fmt.Errorf("could not get default ClientKey for %v: %v", slug, err)
+	}
 	properties := resource.NewPropertyMapFromMap(map[string]interface{}{
-		"organizationSlug": organizationSlug,
-		"name":             project.Name,
-		"slug":             *project.Slug,
+		"organizationSlug":          organizationSlug,
+		"name":                      project.Name,
+		"slug":                      *project.Slug,
+		"teamSlug":                  *project.Team.Slug,
+		"defaultClientKeyDSNPublic": defaultKey.DSN.Public,
 	})
 	state, err := plugin.MarshalProperties(properties, plugin.MarshalOptions{
 		Label: label + ".state", KeepUnknowns: true, SkipNulls: true,
@@ -179,4 +177,22 @@ func parseProjectID(id string) (organizationSlug, slug string, err error) {
 		return "", "", fmt.Errorf("invalid ID: %s", id)
 	}
 	return parts[0], parts[1], nil
+}
+
+func getDefaultClientKey(sentryClient sentryClientAPI, organizationSlug, slug string) (sentry.Key, error) {
+	keys, err := sentryClient.GetClientKeys(
+		sentry.Organization{Slug: &organizationSlug},
+		sentry.Project{Slug: &slug},
+	)
+	if err != nil {
+		return sentry.Key{}, err
+	}
+
+	for _, key := range keys {
+		if key.Label == "Default" {
+			return key, nil
+		}
+	}
+
+	return sentry.Key{}, nil
 }

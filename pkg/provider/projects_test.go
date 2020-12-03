@@ -181,12 +181,20 @@ func TestProjectRead(t *testing.T) {
 	ctx := context.Background()
 	prov := sentryProvider{
 		sentryClient: &sentryClientMock{
+			getClientKeys: func(o sentry.Organization, p sentry.Project) ([]sentry.Key, error) {
+				return []sentry.Key{
+					{Label: "Default", DSN: sentry.DSN{Public: "public-dsn"}},
+				}, nil
+			},
 			getProject: func(org sentry.Organization, projslug string) (sentry.Project, error) {
 				assert.Equal(t, *org.Slug, "org-slug")
 				assert.Equal(t, projslug, "proj-slug")
 				return sentry.Project{
 					Name: "name-from-read",
 					Slug: stringPtr("slug-from-read"),
+					Team: &sentry.Team{
+						Slug: stringPtr("team-slug-from-read"),
+					},
 				}, nil
 			},
 		},
@@ -195,9 +203,11 @@ func TestProjectRead(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, resp.GetId(), "org-slug/slug-from-read")
 	assert.Equal(t, mustUnmarshalProperties(resp.GetProperties()), resource.PropertyMap{
-		"name":             resource.NewPropertyValue("name-from-read"),
-		"organizationSlug": resource.NewPropertyValue("org-slug"),
-		"slug":             resource.NewPropertyValue("slug-from-read"),
+		"name":                      resource.NewPropertyValue("name-from-read"),
+		"organizationSlug":          resource.NewPropertyValue("org-slug"),
+		"slug":                      resource.NewPropertyValue("slug-from-read"),
+		"teamSlug":                  resource.NewPropertyValue("team-slug-from-read"),
+		"defaultClientKeyDSNPublic": resource.NewPropertyValue("public-dsn"),
 	})
 }
 
