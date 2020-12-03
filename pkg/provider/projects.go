@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/atlassian/go-sentry-api"
 	pbempty "github.com/golang/protobuf/ptypes/empty"
+	"github.com/marcin-ro/go-sentry-api"
 	"github.com/pkg/errors"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource/plugin"
@@ -31,16 +31,13 @@ func (k *sentryProvider) projectCheck(ctx context.Context, req *rpc.CheckRequest
 	}
 
 	var failures []*rpc.CheckFailure
-	for _, key := range []string{"organizationSlug", "name", "slug", "teamSlug"} {
-		value := news[resource.PropertyKey(key)]
-		if !isNonEmptyString(value) {
-			failures = append(failures, &rpc.CheckFailure{
-				Property: key,
-				Reason:   "this input must be a non-empty string",
-			})
-			continue
-		}
-	}
+	checkOptionalString(&failures, news, "defaultEnvironment")
+	checkNonEmptyString(&failures, news, "organizationSlug")
+	checkNonEmptyString(&failures, news, "name")
+	checkNonEmptyString(&failures, news, "slug")
+	checkOptionalString(&failures, news, "subjectPrefix")
+	checkOptionalString(&failures, news, "subjectTemplate")
+	checkNonEmptyString(&failures, news, "teamSlug")
 
 	return &rpc.CheckResponse{Inputs: req.News, Failures: failures}, nil
 }
@@ -55,7 +52,7 @@ func (k *sentryProvider) projectDiff(olds, news resource.PropertyMap) (*rpc.Diff
 		"organizationSlug": true,
 	}
 	var diffs, replaces []string
-	for _, key := range []string{"organizationSlug", "name", "slug", "teamSlug"} {
+	for _, key := range []string{"defaultEnvironment", "organizationSlug", "name", "slug", "teamSlug", "subjectPrefix", "subjectTemplate"} {
 		if d.Changed(resource.PropertyKey(key)) {
 			diffs = append(diffs, key)
 			if changeRequiresReplacement[key] {
@@ -88,17 +85,29 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 	if err != nil {
 		return nil, fmt.Errorf("could not CreateProject %v: %v", slug, err)
 	}
+
+	project.DefaultEnvironment = stringPtrFromPropertyValue(inputs["defaultEnvironment"])
+	project.SubjectPrefix = stringPtrFromPropertyValue(inputs["subjectPrefix"])
+	project.SubjectTemplate = stringPtrFromPropertyValue(inputs["subjectTemplate"])
+
+	if err := k.sentryClient.UpdateProject(org, project); err != nil {
+		return nil, fmt.Errorf("could not UpdateProject %v: %v", project.Slug, err)
+	}
+
 	defaultKey, err := getDefaultClientKey(k.sentryClient, organizationSlug, slug)
 	if err != nil {
 		return nil, fmt.Errorf("could not get default ClientKey for %v: %v", slug, err)
 	}
 
 	outputs := map[string]interface{}{
-		"organizationSlug":          organizationSlug,
-		"name":                      project.Name,
-		"slug":                      *project.Slug,
-		"teamSlug":                  teamSlug,
 		"defaultClientKeyDSNPublic": defaultKey.DSN.Public,
+		"defaultEnvironment":        project.DefaultEnvironment,
+		"name":                      project.Name,
+		"organizationSlug":          organizationSlug,
+		"slug":                      *project.Slug,
+		"subjectPrefix":             project.SubjectPrefix,
+		"subjectTemplate":           project.SubjectTemplate,
+		"teamSlug":                  teamSlug,
 	}
 
 	outputProperties, err := plugin.MarshalProperties(
@@ -140,11 +149,14 @@ func (k *sentryProvider) projectRead(ctx context.Context, req *rpc.ReadRequest) 
 		return nil, fmt.Errorf("could not get default ClientKey for %v: %v", slug, err)
 	}
 	properties := resource.NewPropertyMapFromMap(map[string]interface{}{
+		"defaultClientKeyDSNPublic": defaultKey.DSN.Public,
+		"defaultEnvironment":        project.DefaultEnvironment,
 		"organizationSlug":          organizationSlug,
 		"name":                      project.Name,
 		"slug":                      *project.Slug,
+		"subjectPrefix":             project.SubjectPrefix,
+		"subjectTemplate":           project.SubjectTemplate,
 		"teamSlug":                  *project.Team.Slug,
-		"defaultClientKeyDSNPublic": defaultKey.DSN.Public,
 	})
 	state, err := plugin.MarshalProperties(properties, plugin.MarshalOptions{
 		Label: label + ".state", KeepUnknowns: true, SkipNulls: true,

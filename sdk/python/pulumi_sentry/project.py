@@ -15,9 +15,12 @@ class Project(pulumi.CustomResource):
     def __init__(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
+                 default_environment: Optional[pulumi.Input[str]] = None,
                  name: Optional[pulumi.Input[str]] = None,
                  organization_slug: Optional[pulumi.Input[str]] = None,
                  slug: Optional[pulumi.Input[str]] = None,
+                 subject_prefix: Optional[pulumi.Input[str]] = None,
+                 subject_template: Optional[pulumi.Input[str]] = None,
                  team_slug: Optional[pulumi.Input[str]] = None,
                  __props__=None,
                  __name__=None,
@@ -44,6 +47,7 @@ class Project(pulumi.CustomResource):
                 raise TypeError('__props__ is only valid when passed in combination with a valid opts.id to get an existing resource')
             __props__ = dict()
 
+            __props__['default_environment'] = default_environment
             if name is None:
                 raise TypeError("Missing required property 'name'")
             __props__['name'] = name
@@ -53,6 +57,8 @@ class Project(pulumi.CustomResource):
             if slug is None:
                 raise TypeError("Missing required property 'slug'")
             __props__['slug'] = slug
+            __props__['subject_prefix'] = subject_prefix
+            __props__['subject_template'] = subject_template
             if team_slug is None:
                 raise TypeError("Missing required property 'team_slug'")
             __props__['team_slug'] = team_slug
@@ -87,6 +93,11 @@ class Project(pulumi.CustomResource):
         return pulumi.get(self, "default_client_key_dsn_public")
 
     @property
+    @pulumi.getter(name="defaultEnvironment")
+    def default_environment(self) -> pulumi.Output[Optional[str]]:
+        return pulumi.get(self, "default_environment")
+
+    @property
     @pulumi.getter
     def name(self) -> pulumi.Output[str]:
         return pulumi.get(self, "name")
@@ -100,6 +111,16 @@ class Project(pulumi.CustomResource):
     @pulumi.getter
     def slug(self) -> pulumi.Output[str]:
         return pulumi.get(self, "slug")
+
+    @property
+    @pulumi.getter(name="subjectPrefix")
+    def subject_prefix(self) -> pulumi.Output[Optional[str]]:
+        return pulumi.get(self, "subject_prefix")
+
+    @property
+    @pulumi.getter(name="subjectTemplate")
+    def subject_template(self) -> pulumi.Output[Optional[str]]:
+        return pulumi.get(self, "subject_template")
 
     @property
     @pulumi.getter(name="teamSlug")

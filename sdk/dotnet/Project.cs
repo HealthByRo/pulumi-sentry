@@ -14,6 +14,9 @@ namespace Pulumi.Sentry
         [Output("defaultClientKeyDSNPublic")]
         public Output<string?> DefaultClientKeyDSNPublic { get; private set; } = null!;
 
+        [Output("defaultEnvironment")]
+        public Output<string?> DefaultEnvironment { get; private set; } = null!;
+
         [Output("name")]
         public Output<string> Name { get; private set; } = null!;
 
@@ -22,6 +25,12 @@ namespace Pulumi.Sentry
 
         [Output("slug")]
         public Output<string> Slug { get; private set; } = null!;
+
+        [Output("subjectPrefix")]
+        public Output<string?> SubjectPrefix { get; private set; } = null!;
+
+        [Output("subjectTemplate")]
+        public Output<string?> SubjectTemplate { get; private set; } = null!;
 
         [Output("teamSlug")]
         public Output<string?> TeamSlug { get; private set; } = null!;
@@ -71,6 +80,9 @@ namespace Pulumi.Sentry
 
     public sealed class ProjectArgs : Pulumi.ResourceArgs
     {
+        [Input("defaultEnvironment")]
+        public Input<string>? DefaultEnvironment { get; set; }
+
         [Input("name", required: true)]
         public Input<string> Name { get; set; } = null!;
 
@@ -79,6 +91,12 @@ namespace Pulumi.Sentry
 
         [Input("slug", required: true)]
         public Input<string> Slug { get; set; } = null!;
+
+        [Input("subjectPrefix")]
+        public Input<string>? SubjectPrefix { get; set; }
+
+        [Input("subjectTemplate")]
+        public Input<string>? SubjectTemplate { get; set; }
 
         [Input("teamSlug", required: true)]
         public Input<string> TeamSlug { get; set; } = null!;

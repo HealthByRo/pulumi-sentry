@@ -1,6 +1,6 @@
 package provider
 
-import "github.com/atlassian/go-sentry-api"
+import "github.com/marcin-ro/go-sentry-api"
 
 // sentryClientAPI is an interface that covers all the functionality we need
 // from sentry.Client.

@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/atlassian/go-sentry-api"
+	"github.com/marcin-ro/go-sentry-api"
 	"github.com/pulumi/pulumi/pkg/v2/resource/provider"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource/plugin"

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/atlassian/go-sentry-api"
+	"github.com/marcin-ro/go-sentry-api"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource"
 	rpc "github.com/pulumi/pulumi/sdk/v2/proto/go"
 	"github.com/stvp/assert"
@@ -16,7 +16,7 @@ func TestProjectCheck(t *testing.T) {
 		news         resource.PropertyMap
 		wantFailures []*rpc.CheckFailure
 	}{
-		"nulls": {
+		"nulls for required fields": {
 			news: resource.PropertyMap{},
 			wantFailures: []*rpc.CheckFailure{
 				{Property: "name", Reason: "this input must be a non-empty string"},
@@ -27,15 +27,21 @@ func TestProjectCheck(t *testing.T) {
 		},
 		"wrong type": {
 			news: resource.PropertyMap{
-				"name":             resource.NewPropertyValue(1),
-				"organizationSlug": resource.NewPropertyValue(1),
-				"slug":             resource.NewPropertyValue(1),
-				"teamSlug":         resource.NewPropertyValue(1),
+				"defaultEnvironment": resource.NewPropertyValue(1),
+				"name":               resource.NewPropertyValue(1),
+				"organizationSlug":   resource.NewPropertyValue(1),
+				"slug":               resource.NewPropertyValue(1),
+				"subjectPrefix":      resource.NewPropertyValue(1),
+				"subjectTemplate":    resource.NewPropertyValue(1),
+				"teamSlug":           resource.NewPropertyValue(1),
 			},
 			wantFailures: []*rpc.CheckFailure{
+				{Property: "defaultEnvironment", Reason: "this input must be a string"},
 				{Property: "name", Reason: "this input must be a non-empty string"},
 				{Property: "organizationSlug", Reason: "this input must be a non-empty string"},
 				{Property: "slug", Reason: "this input must be a non-empty string"},
+				{Property: "subjectPrefix", Reason: "this input must be a string"},
+				{Property: "subjectTemplate", Reason: "this input must be a string"},
 				{Property: "teamSlug", Reason: "this input must be a non-empty string"},
 			},
 		},
@@ -55,12 +61,24 @@ func TestProjectCheck(t *testing.T) {
 		// 		{Property: "teamSlug", Reason: "this input must be a slug"},
 		// 	},
 		// },
-		"correct": {
+		"correct minimal": {
 			news: resource.PropertyMap{
 				"name":             resource.NewPropertyValue("a name"),
 				"organizationSlug": resource.NewPropertyValue("org-slug"),
 				"slug":             resource.NewPropertyValue("slug"),
 				"teamSlug":         resource.NewPropertyValue("team-slug"),
+			},
+			wantFailures: nil,
+		},
+		"correct full": {
+			news: resource.PropertyMap{
+				"defaultEnvironment": resource.NewPropertyValue("env name"),
+				"name":               resource.NewPropertyValue("a name"),
+				"organizationSlug":   resource.NewPropertyValue("org-slug"),
+				"slug":               resource.NewPropertyValue("slug"),
+				"subjectPrefix":      resource.NewPropertyValue("subject prefix"),
+				"subjectTemplate":    resource.NewPropertyValue("subject template"),
+				"teamSlug":           resource.NewPropertyValue("team-slug"),
 			},
 			wantFailures: nil,
 		},
@@ -82,10 +100,13 @@ func TestProjectCheck(t *testing.T) {
 
 func TestProjectDiff(t *testing.T) {
 	baseOlds := resource.PropertyMap{
-		"name":             resource.NewPropertyValue("base name"),
-		"organizationSlug": resource.NewPropertyValue("base-org-slug"),
-		"slug":             resource.NewPropertyValue("base-slug"),
-		"teamSlug":         resource.NewPropertyValue("base-team-slug"),
+		"defaultEnvironment": resource.NewPropertyValue("base env name"),
+		"name":               resource.NewPropertyValue("base name"),
+		"organizationSlug":   resource.NewPropertyValue("base-org-slug"),
+		"slug":               resource.NewPropertyValue("base-slug"),
+		"subjectPrefix":      resource.NewPropertyValue("base subject prefix"),
+		"subjectTemplate":    resource.NewPropertyValue("base subject template"),
+		"teamSlug":           resource.NewPropertyValue("base-team-slug"),
 	}
 	tests := map[string]struct {
 		olds, news   resource.PropertyMap
@@ -98,25 +119,24 @@ func TestProjectDiff(t *testing.T) {
 		},
 		"simple updates": {
 			olds: baseOlds,
-			news: resource.PropertyMap{
-				"name":             resource.NewPropertyValue("new name"),
-				"organizationSlug": resource.NewPropertyValue("base-org-slug"),
-				"slug":             resource.NewPropertyValue("new-slug"),
-				"teamSlug":         resource.NewPropertyValue("new-team-slug"),
-			},
+			news: propertyMapWithOverrides(baseOlds, resource.PropertyMap{
+				"defaultEnvironment": resource.NewPropertyValue("new env name"),
+				"name":               resource.NewPropertyValue("new name"),
+				"slug":               resource.NewPropertyValue("new-slug"),
+				"subjectPrefix":      resource.NewPropertyValue("new subject prefix"),
+				"subjectTemplate":    resource.NewPropertyValue("new subject template"),
+				"teamSlug":           resource.NewPropertyValue("new-team-slug"),
+			}),
 			wantResponse: rpc.DiffResponse{
 				Changes: rpc.DiffResponse_DIFF_SOME,
-				Diffs:   []string{"name", "slug", "teamSlug"},
+				Diffs:   []string{"defaultEnvironment", "name", "slug", "teamSlug", "subjectPrefix", "subjectTemplate"},
 			},
 		},
 		"replacement": {
 			olds: baseOlds,
-			news: resource.PropertyMap{
-				"name":             resource.NewPropertyValue("base name"),
+			news: propertyMapWithOverrides(baseOlds, resource.PropertyMap{
 				"organizationSlug": resource.NewPropertyValue("new-org-slug"),
-				"slug":             resource.NewPropertyValue("base-slug"),
-				"teamSlug":         resource.NewPropertyValue("base-team-slug"),
-			},
+			}),
 			wantResponse: rpc.DiffResponse{
 				Changes:             rpc.DiffResponse_DIFF_SOME,
 				Diffs:               []string{"organizationSlug"},
@@ -138,6 +158,7 @@ func TestProjectDiff(t *testing.T) {
 func TestProjectCreate(t *testing.T) {
 	ctx := context.Background()
 	createCalled := false
+	updateCalled := false
 	prov := sentryProvider{
 		sentryClient: &sentryClientMock{
 			createProject: func(org sentry.Organization, team sentry.Team, name string, slug *string) (sentry.Project, error) {
@@ -151,6 +172,15 @@ func TestProjectCreate(t *testing.T) {
 					Slug: stringPtr("slug-from-create"),
 				}, nil
 			},
+			updateProject: func(org sentry.Organization, proj sentry.Project) error {
+				assert.True(t, createCalled)
+				assert.Equal(t, *proj.DefaultEnvironment, "env name")
+				assert.Equal(t, *proj.SubjectPrefix, "subject prefix")
+				assert.Equal(t, *proj.SubjectTemplate, "subject template")
+				assert.Equal(t, *proj.DefaultEnvironment, "env name")
+				updateCalled = true
+				return nil
+			},
 			getClientKeys: func(o sentry.Organization, p sentry.Project) ([]sentry.Key, error) {
 				return []sentry.Key{
 					{Label: "Default", DSN: sentry.DSN{Public: "public-dsn"}},
@@ -159,20 +189,26 @@ func TestProjectCreate(t *testing.T) {
 		},
 	}
 	inputs := resource.PropertyMap{
-		"name":             resource.NewPropertyValue("a name"),
-		"organizationSlug": resource.NewPropertyValue("the-org"),
-		"slug":             resource.NewPropertyValue("slug"),
-		"teamSlug":         resource.NewPropertyValue("the-team"),
+		"defaultEnvironment": resource.NewPropertyValue("env name"),
+		"name":               resource.NewPropertyValue("a name"),
+		"organizationSlug":   resource.NewPropertyValue("the-org"),
+		"slug":               resource.NewPropertyValue("slug"),
+		"subjectPrefix":      resource.NewPropertyValue("subject prefix"),
+		"subjectTemplate":    resource.NewPropertyValue("subject template"),
+		"teamSlug":           resource.NewPropertyValue("the-team"),
 	}
 	resp, err := prov.projectCreate(ctx, &rpc.CreateRequest{}, inputs)
 	assert.Nil(t, err)
-	assert.True(t, createCalled)
+	assert.True(t, updateCalled)
 	assert.Equal(t, resp.GetId(), "the-org/slug-from-create")
 	assert.Equal(t, mustUnmarshalProperties(resp.GetProperties()), resource.PropertyMap{
+		"defaultEnvironment":        resource.NewPropertyValue("env name"),
 		"name":                      resource.NewPropertyValue("name-from-create"),
 		"organizationSlug":          resource.NewPropertyValue("the-org"),
 		"slug":                      resource.NewPropertyValue("slug-from-create"),
 		"teamSlug":                  resource.NewPropertyValue("the-team"),
+		"subjectPrefix":             resource.NewPropertyValue("subject prefix"),
+		"subjectTemplate":           resource.NewPropertyValue("subject template"),
 		"defaultClientKeyDSNPublic": resource.NewPropertyValue("public-dsn"),
 	})
 }
@@ -190,8 +226,11 @@ func TestProjectRead(t *testing.T) {
 				assert.Equal(t, *org.Slug, "org-slug")
 				assert.Equal(t, projslug, "proj-slug")
 				return sentry.Project{
-					Name: "name-from-read",
-					Slug: stringPtr("slug-from-read"),
+					DefaultEnvironment: stringPtr("default-env-from-read"),
+					Name:               "name-from-read",
+					Slug:               stringPtr("slug-from-read"),
+					SubjectPrefix:      stringPtr("subject-prefix-from-read"),
+					SubjectTemplate:    stringPtr("subject-template-from-read"),
 					Team: &sentry.Team{
 						Slug: stringPtr("team-slug-from-read"),
 					},
@@ -203,11 +242,14 @@ func TestProjectRead(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, resp.GetId(), "org-slug/slug-from-read")
 	assert.Equal(t, mustUnmarshalProperties(resp.GetProperties()), resource.PropertyMap{
+		"defaultEnvironment":        resource.NewPropertyValue("default-env-from-read"),
+		"defaultClientKeyDSNPublic": resource.NewPropertyValue("public-dsn"),
 		"name":                      resource.NewPropertyValue("name-from-read"),
 		"organizationSlug":          resource.NewPropertyValue("org-slug"),
 		"slug":                      resource.NewPropertyValue("slug-from-read"),
+		"subjectPrefix":             resource.NewPropertyValue("subject-prefix-from-read"),
+		"subjectTemplate":           resource.NewPropertyValue("subject-template-from-read"),
 		"teamSlug":                  resource.NewPropertyValue("team-slug-from-read"),
-		"defaultClientKeyDSNPublic": resource.NewPropertyValue("public-dsn"),
 	})
 }
 
