@@ -18,6 +18,7 @@ class Project(pulumi.CustomResource):
                  name: Optional[pulumi.Input[str]] = None,
                  organization_slug: Optional[pulumi.Input[str]] = None,
                  slug: Optional[pulumi.Input[str]] = None,
+                 team_slug: Optional[pulumi.Input[str]] = None,
                  __props__=None,
                  __name__=None,
                  __opts__=None):
@@ -52,7 +53,9 @@ class Project(pulumi.CustomResource):
             if slug is None:
                 raise TypeError("Missing required property 'slug'")
             __props__['slug'] = slug
-            __props__['team_slug'] = None
+            if team_slug is None:
+                raise TypeError("Missing required property 'team_slug'")
+            __props__['team_slug'] = team_slug
         super(Project, __self__).__init__(
             'sentry:index:Project',
             resource_name,
@@ -91,11 +94,6 @@ class Project(pulumi.CustomResource):
     @pulumi.getter
     def slug(self) -> pulumi.Output[Optional[str]]:
         return pulumi.get(self, "slug")
-
-    @property
-    @pulumi.getter(name="teamSlug")
-    def team_slug(self) -> pulumi.Output[str]:
-        return pulumi.get(self, "team_slug")
 
     def translate_output_property(self, prop):
         return _tables.CAMEL_TO_SNAKE_CASE_TABLE.get(prop) or prop

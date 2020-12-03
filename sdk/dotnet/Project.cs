@@ -20,9 +20,6 @@ namespace Pulumi.Sentry
         [Output("slug")]
         public Output<string?> Slug { get; private set; } = null!;
 
-        [Output("teamSlug")]
-        public Output<string> TeamSlug { get; private set; } = null!;
-
 
         /// <summary>
         /// Create a Project resource with the given unique name, arguments, and options.
@@ -76,6 +73,9 @@ namespace Pulumi.Sentry
 
         [Input("slug", required: true)]
         public Input<string> Slug { get; set; } = null!;
+
+        [Input("teamSlug", required: true)]
+        public Input<string> TeamSlug { get; set; } = null!;
 
         public ProjectArgs()
         {

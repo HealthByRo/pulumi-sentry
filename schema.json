@@ -12,12 +12,16 @@
                 },
                 "slug": {
                     "type": "string"
+                },
+                "teamSlug": {
+                    "type": "string"
                 }
             },
             "requiredInputs": [
                 "organizationSlug",
                 "slug",
-                "name"
+                "name",
+                "teamSlug"
             ],
             "properties": {
                 "organizationSlug": {
@@ -28,15 +32,11 @@
                 },
                 "slug": {
                     "type": "string"
-                },
-                "teamSlug": {
-                    "type": "string"
                 }
             },
             "required": [
                 "organizationSlug",
-                "name",
-                "teamSlug"
+                "name"
             ]
         },
         "sentry:index:ClientKey": {
