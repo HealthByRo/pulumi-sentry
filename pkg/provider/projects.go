@@ -7,6 +7,7 @@ import (
 
 	"github.com/atlassian/go-sentry-api"
 	pbempty "github.com/golang/protobuf/ptypes/empty"
+	"github.com/pkg/errors"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource/plugin"
 	logger "github.com/pulumi/pulumi/sdk/v2/go/common/util/logging"
@@ -14,8 +15,34 @@ import (
 )
 
 func (k *sentryProvider) projectCheck(ctx context.Context, req *rpc.CheckRequest) (*rpc.CheckResponse, error) {
-	// TODO: validate the slug
-	return &rpc.CheckResponse{Inputs: req.News, Failures: nil}, nil
+	urn := resource.URN(req.GetUrn())
+	label := fmt.Sprintf("%s.Check(%s)", k.label(), urn)
+	logger.V(9).Infof("%s executing", label)
+
+	news, err := plugin.UnmarshalProperties(req.GetNews(), plugin.MarshalOptions{
+		Label:        fmt.Sprintf("%s.news", label),
+		KeepUnknowns: true,
+		SkipNulls:    true,
+		RejectAssets: true,
+		KeepSecrets:  true,
+	})
+	if err != nil {
+		return nil, errors.Wrapf(err, "check failed because malformed resource inputs")
+	}
+
+	var failures []*rpc.CheckFailure
+	for _, key := range []string{"organizationSlug", "name", "slug", "teamSlug"} {
+		value := news[resource.PropertyKey(key)]
+		if !isNonEmptyString(value) {
+			failures = append(failures, &rpc.CheckFailure{
+				Property: key,
+				Reason:   "this input must be a non-empty string",
+			})
+			continue
+		}
+	}
+
+	return &rpc.CheckResponse{Inputs: req.News, Failures: failures}, nil
 }
 
 func (k *sentryProvider) projectDiff(olds, news resource.PropertyMap) (*rpc.DiffResponse, error) {
