@@ -89,7 +89,7 @@ func (k *sentryProvider) keyRead(ctx context.Context, req *rpc.ReadRequest) (*rp
 	panic("not implemented")
 }
 
-func (k *sentryProvider) keyDelete(ctx context.Context, req *rpc.DeleteRequest, inputs resource.PropertyMap) (*pbempty.Empty, error) {
+func (k *sentryProvider) keyDelete(ctx context.Context, req *rpc.DeleteRequest) (*pbempty.Empty, error) {
 	organizationSlug, projectSlug, localID, err := parseKeyID(req.GetId())
 	if err != nil {
 		return &pbempty.Empty{}, err

@@ -167,3 +167,21 @@ func TestProjectRead(t *testing.T) {
 		"teamSlug":         resource.NewPropertyValue("the-team-from-read"),
 	})
 }
+
+func TestProjectDelete(t *testing.T) {
+	ctx := context.Background()
+	deleteCalled := false
+	prov := sentryProvider{
+		sentryClient: &sentryClientMock{
+			deleteProject: func(org sentry.Organization, proj sentry.Project) error {
+				assert.Equal(t, *org.Slug, "the-org")
+				assert.Equal(t, *proj.Slug, "the-proj")
+				deleteCalled = true
+				return nil
+			},
+		},
+	}
+	_, err := prov.projectDelete(ctx, &rpc.DeleteRequest{Id: "the-org/the-proj"})
+	assert.Nil(t, err)
+	assert.True(t, deleteCalled)
+}

@@ -150,20 +150,12 @@ func (k *sentryProvider) projectRead(ctx context.Context, req *rpc.ReadRequest) 
 	}, nil
 }
 
-func (k *sentryProvider) projectDelete(ctx context.Context, req *rpc.DeleteRequest, inputs resource.PropertyMap) (*pbempty.Empty, error) {
+func (k *sentryProvider) projectDelete(ctx context.Context, req *rpc.DeleteRequest) (*pbempty.Empty, error) {
 	organizationSlug, slug, err := parseProjectID(req.GetId())
 	if err != nil {
 		return &pbempty.Empty{}, err
 	}
-	organization, err := k.sentryClient.GetOrganization(organizationSlug)
-	if err != nil {
-		return nil, err
-	}
-	project, err := k.sentryClient.GetProject(organization, slug)
-	if err != nil {
-		return nil, err
-	}
-	err = k.sentryClient.DeleteProject(organization, project)
+	err = k.sentryClient.DeleteProject(sentry.Organization{Slug: &organizationSlug}, sentry.Project{Slug: &slug})
 	return &pbempty.Empty{}, err
 }
 

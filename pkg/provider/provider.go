@@ -207,18 +207,13 @@ func (k *sentryProvider) Update(ctx context.Context, req *rpc.UpdateRequest) (*r
 // Delete tears down an existing resource with the given ID.  If it fails, the resource is assumed
 // to still exist.
 func (k *sentryProvider) Delete(ctx context.Context, req *rpc.DeleteRequest) (*pbempty.Empty, error) {
-	inputs, err := plugin.UnmarshalProperties(req.GetProperties(), plugin.MarshalOptions{KeepUnknowns: true, SkipNulls: true})
-	if err != nil {
-		return nil, err
-	}
-
 	urn := resource.URN(req.GetUrn())
 	ty := urn.Type()
 	switch ty {
 	case "sentry:index:Project":
-		return k.projectDelete(ctx, req, inputs)
+		return k.projectDelete(ctx, req)
 	case "sentry:index:ClientKey":
-		return k.keyDelete(ctx, req, inputs)
+		return k.keyDelete(ctx, req)
 	}
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 
