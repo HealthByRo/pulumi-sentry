@@ -86,18 +86,10 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 		return nil, fmt.Errorf("could not CreateProject %v: %v", slug, err)
 	}
 
-	if !inputs["defaultEnvironment"].IsNull() {
-		val := inputs["defaultEnvironment"].StringValue()
-		project.DefaultEnvironment = &val
-	}
-	if !inputs["subjectPrefix"].IsNull() {
-		val := inputs["subjectPrefix"].StringValue()
-		project.SubjectPrefix = &val
-	}
-	if !inputs["subjectTemplate"].IsNull() {
-		val := inputs["subjectTemplate"].StringValue()
-		project.SubjectTemplate = &val
-	}
+	project.DefaultEnvironment = stringPtrFromPropertyValue(inputs["defaultEnvironment"])
+	project.SubjectPrefix = stringPtrFromPropertyValue(inputs["subjectPrefix"])
+	project.SubjectTemplate = stringPtrFromPropertyValue(inputs["subjectTemplate"])
+
 	if err := k.sentryClient.UpdateProject(org, project); err != nil {
 		return nil, fmt.Errorf("could not UpdateProject %v: %v", project.Slug, err)
 	}
