@@ -144,7 +144,10 @@ func (k *sentryProvider) projectRead(ctx context.Context, req *rpc.ReadRequest) 
 	if err != nil {
 		return nil, err
 	}
-	return &rpc.ReadResponse{Id: id, Properties: state}, nil
+	return &rpc.ReadResponse{
+		Id:         buildProjectID(*project.Organization.Slug, *project.Slug),
+		Properties: state,
+	}, nil
 }
 
 func (k *sentryProvider) projectDelete(ctx context.Context, req *rpc.DeleteRequest, inputs resource.PropertyMap) (*pbempty.Empty, error) {
