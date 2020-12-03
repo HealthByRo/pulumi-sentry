@@ -74,24 +74,15 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 	slug := inputs["slug"].StringValue()
 	teamSlug := inputs["teamSlug"].StringValue()
 
-	organization, err := k.sentryClient.GetOrganization(organizationSlug)
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve Organization %#v: %v", organizationSlug, err)
-	}
-	team, err := k.sentryClient.GetTeam(organization, teamSlug)
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve Team: %v", err)
-	}
-
-	project, err := k.sentryClient.CreateProject(organization, team, name, &slug)
+	project, err := k.sentryClient.CreateProject(sentry.Organization{Slug: &organizationSlug}, sentry.Team{Slug: &teamSlug}, name, &slug)
 	if err != nil {
 		return nil, fmt.Errorf("could not CreateProject %v: %v", slug, err)
 	}
 	outputs := map[string]interface{}{
-		"organizationSlug": *organization.Slug,
+		"organizationSlug": organizationSlug,
 		"name":             project.Name,
 		"slug":             *project.Slug,
-		"teamSlug":         *team.Slug,
+		"teamSlug":         teamSlug,
 	}
 
 	outputProperties, err := plugin.MarshalProperties(
@@ -102,7 +93,7 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 		return nil, err
 	}
 	return &rpc.CreateResponse{
-		Id:         buildProjectID(*organization.Slug, *project.Slug),
+		Id:         buildProjectID(organizationSlug, *project.Slug),
 		Properties: outputProperties,
 	}, nil
 }
