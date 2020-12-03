@@ -88,10 +88,10 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 		return nil, fmt.Errorf("could not CreateProject %v: %v", slug, err)
 	}
 	outputs := map[string]interface{}{
-		"organizationSlug": organizationSlug,
-		"name":             name,
+		"organizationSlug": *organization.Slug,
+		"name":             project.Name,
 		"slug":             *project.Slug,
-		"teamSlug":         teamSlug,
+		"teamSlug":         *team.Slug,
 	}
 
 	outputProperties, err := plugin.MarshalProperties(
@@ -102,7 +102,7 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 		return nil, err
 	}
 	return &rpc.CreateResponse{
-		Id:         buildProjectID(organizationSlug, slug),
+		Id:         buildProjectID(*organization.Slug, *project.Slug),
 		Properties: outputProperties,
 	}, nil
 }

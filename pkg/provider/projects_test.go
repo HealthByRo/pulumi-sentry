@@ -5,11 +5,10 @@ import (
 	"sort"
 	"testing"
 
+	"github.com/atlassian/go-sentry-api"
 	"github.com/pulumi/pulumi/sdk/v2/go/common/resource"
-	"github.com/pulumi/pulumi/sdk/v2/go/common/resource/plugin"
 	rpc "github.com/pulumi/pulumi/sdk/v2/proto/go"
 	"github.com/stvp/assert"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type byProperty []*rpc.CheckFailure
@@ -91,15 +90,44 @@ func TestProjectCheck(t *testing.T) {
 	}
 }
 
-func mustMarshalProperties(props resource.PropertyMap) *structpb.Struct {
-	marshaled, err := plugin.MarshalProperties(props, plugin.MarshalOptions{
-		Label:         "test-label",
-		KeepUnknowns:  true,
-		KeepSecrets:   true,
-		KeepResources: true,
-	})
-	if err != nil {
-		panic(err)
+func TestProjectCreate(t *testing.T) {
+	ctx := context.Background()
+	createCalled := false
+	prov := sentryProvider{
+		sentryClient: &sentryClientMock{
+			getOrganization: func(orgslug string) (sentry.Organization, error) {
+				return sentry.Organization{Slug: stringPtr("slug-from-getOrganization")}, nil
+			},
+			getTeam: func(org sentry.Organization, teamSlug string) (sentry.Team, error) {
+				return sentry.Team{Slug: stringPtr("slug-from-getTeam")}, nil
+			},
+			createProject: func(org sentry.Organization, team sentry.Team, name string, slug *string) (sentry.Project, error) {
+				assert.Equal(t, *org.Slug, "slug-from-getOrganization")
+				assert.Equal(t, *team.Slug, "slug-from-getTeam")
+				assert.Equal(t, name, "a name")
+				assert.Equal(t, *slug, "slug")
+				createCalled = true
+				return sentry.Project{
+					Name: "name-from-fake-sentry",
+					Slug: stringPtr("slug-from-fake-sentry"),
+				}, nil
+			},
+		},
 	}
-	return marshaled
+	inputs := resource.PropertyMap{
+		"name":             resource.NewPropertyValue("a name"),
+		"organizationSlug": resource.NewPropertyValue("org-slug"),
+		"slug":             resource.NewPropertyValue("slug"),
+		"teamSlug":         resource.NewPropertyValue("team-slug"),
+	}
+	resp, err := prov.projectCreate(ctx, &rpc.CreateRequest{}, inputs)
+	assert.Nil(t, err)
+	assert.True(t, createCalled)
+	assert.Equal(t, resp.GetId(), "slug-from-getOrganization/slug-from-fake-sentry")
+	assert.Equal(t, mustUnmarshalProperties(resp.GetProperties()), resource.PropertyMap{
+		"name":             resource.NewPropertyValue("name-from-fake-sentry"),
+		"organizationSlug": resource.NewPropertyValue("slug-from-getOrganization"),
+		"slug":             resource.NewPropertyValue("slug-from-fake-sentry"),
+		"teamSlug":         resource.NewPropertyValue("slug-from-getTeam"),
+	})
 }
