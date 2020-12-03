@@ -3,21 +3,13 @@
 # *** Do not edit by hand unless you're certain you know what you are doing! ***
 
 SNAKE_TO_CAMEL_CASE_TABLE = {
-    "date_created": "dateCreated",
-    "dsn_csp": "dsnCSP",
-    "dsn_public": "dsnPublic",
-    "dsn_secret": "dsnSecret",
+    "default_client_key_dsn_public": "defaultClientKeyDSNPublic",
     "organization_slug": "organizationSlug",
-    "project_slug": "projectSlug",
     "team_slug": "teamSlug",
 }
 
 CAMEL_TO_SNAKE_CASE_TABLE = {
-    "dateCreated": "date_created",
-    "dsnCSP": "dsn_csp",
-    "dsnPublic": "dsn_public",
-    "dsnSecret": "dsn_secret",
+    "defaultClientKeyDSNPublic": "default_client_key_dsn_public",
     "organizationSlug": "organization_slug",
-    "projectSlug": "project_slug",
     "teamSlug": "team_slug",
 }

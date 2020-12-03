@@ -32,56 +32,15 @@
                 },
                 "slug": {
                     "type": "string"
+                },
+                "defaultClientKeyDSNPublic": {
+                    "type": "string"
                 }
             },
             "required": [
                 "organizationSlug",
                 "name"
             ]
-        },
-        "sentry:index:ClientKey": {
-            "inputProperties": {
-                "name": {
-                    "type": "string"
-                },
-                "organizationSlug": {
-                    "type": "string"
-                },
-                "projectSlug": {
-                    "type": "string"
-                }
-            },
-            "requiredInputs": [
-                "name",
-                "organizationSlug",
-                "projectSlug"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "dsnSecret": {
-                    "type": "string",
-                    "secret": true
-                },
-                "dsnCSP": {
-                    "type": "string"
-                },
-                "dsnPublic": {
-                    "type": "string"
-                },
-                "secret": {
-                    "type": "string",
-                    "secret": true
-                },
-                "public": {
-                    "type": "string"
-                },
-                "dateCreated": {
-                    "type": "string"
-                }
-            },
-            "required": []
         }
     },
     "language": {

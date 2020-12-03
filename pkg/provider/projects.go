@@ -74,15 +74,28 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 	slug := inputs["slug"].StringValue()
 	teamSlug := inputs["teamSlug"].StringValue()
 
-	project, err := k.sentryClient.CreateProject(sentry.Organization{Slug: &organizationSlug}, sentry.Team{Slug: &teamSlug}, name, &slug)
+	org := sentry.Organization{Slug: &organizationSlug}
+	project, err := k.sentryClient.CreateProject(org, sentry.Team{Slug: &teamSlug}, name, &slug)
 	if err != nil {
 		return nil, fmt.Errorf("could not CreateProject %v: %v", slug, err)
 	}
+	keys, err := k.sentryClient.GetClientKeys(org, project)
+	if err != nil {
+		return nil, fmt.Errorf("could not GetClientKeys: %v", err)
+	}
+
+	var defaultKey sentry.Key
+	for _, key := range keys {
+		if key.Label == "Default" {
+			defaultKey = key
+			break
+		}
+	}
+
 	outputs := map[string]interface{}{
-		"organizationSlug": organizationSlug,
-		"name":             project.Name,
-		"slug":             *project.Slug,
-		"teamSlug":         teamSlug,
+		"name":                      project.Name,
+		"slug":                      *project.Slug,
+		"defaultClientKeyDSNPublic": defaultKey.DSN.Public,
 	}
 
 	outputProperties, err := plugin.MarshalProperties(

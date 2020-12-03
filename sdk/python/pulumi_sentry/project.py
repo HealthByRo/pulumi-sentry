@@ -56,6 +56,7 @@ class Project(pulumi.CustomResource):
             if team_slug is None:
                 raise TypeError("Missing required property 'team_slug'")
             __props__['team_slug'] = team_slug
+            __props__['default_client_key_dsn_public'] = None
         super(Project, __self__).__init__(
             'sentry:index:Project',
             resource_name,
@@ -79,6 +80,11 @@ class Project(pulumi.CustomResource):
         __props__ = dict()
 
         return Project(resource_name, opts=opts, __props__=__props__)
+
+    @property
+    @pulumi.getter(name="defaultClientKeyDSNPublic")
+    def default_client_key_dsn_public(self) -> pulumi.Output[Optional[str]]:
+        return pulumi.get(self, "default_client_key_dsn_public")
 
     @property
     @pulumi.getter

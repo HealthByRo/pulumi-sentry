@@ -126,8 +126,6 @@ func (k *sentryProvider) Check(ctx context.Context, req *rpc.CheckRequest) (*rpc
 	switch ty {
 	case "sentry:index:Project":
 		return k.projectCheck(ctx, req)
-	case "sentry:index:ClientKey":
-		return k.keyCheck(ctx, req)
 	}
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 }
@@ -150,8 +148,6 @@ func (k *sentryProvider) Diff(ctx context.Context, req *rpc.DiffRequest) (*rpc.D
 	switch ty {
 	case "sentry:index:Project":
 		return k.projectDiff(olds, news)
-	case "sentry:index:ClientKey":
-		return k.keyDiff(olds, news)
 	}
 
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
@@ -169,8 +165,6 @@ func (k *sentryProvider) Create(ctx context.Context, req *rpc.CreateRequest) (*r
 	switch ty {
 	case "sentry:index:Project":
 		return k.projectCreate(ctx, req, inputs)
-	case "sentry:index:ClientKey":
-		return k.keyCreate(ctx, req, inputs)
 	}
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 }
@@ -182,8 +176,6 @@ func (k *sentryProvider) Read(ctx context.Context, req *rpc.ReadRequest) (*rpc.R
 	switch ty {
 	case "sentry:index:Project":
 		return k.projectRead(ctx, req)
-	case "sentry:index:ClientKey":
-		return k.keyRead(ctx, req)
 	}
 
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
@@ -197,8 +189,6 @@ func (k *sentryProvider) Update(ctx context.Context, req *rpc.UpdateRequest) (*r
 	switch ty {
 	case "sentry:index:Project":
 		panic("Update not implemented for sentry:index:Project")
-	case "sentry:index:ClientKey":
-		panic("Update not implemented for sentry:index:ClientKey")
 	}
 
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
@@ -212,8 +202,6 @@ func (k *sentryProvider) Delete(ctx context.Context, req *rpc.DeleteRequest) (*p
 	switch ty {
 	case "sentry:index:Project":
 		return k.projectDelete(ctx, req)
-	case "sentry:index:ClientKey":
-		return k.keyDelete(ctx, req)
 	}
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
 

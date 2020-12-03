@@ -14,9 +14,10 @@ import (
 type Project struct {
 	pulumi.CustomResourceState
 
-	Name             pulumi.StringOutput    `pulumi:"name"`
-	OrganizationSlug pulumi.StringOutput    `pulumi:"organizationSlug"`
-	Slug             pulumi.StringPtrOutput `pulumi:"slug"`
+	DefaultClientKeyDSNPublic pulumi.StringPtrOutput `pulumi:"defaultClientKeyDSNPublic"`
+	Name                      pulumi.StringOutput    `pulumi:"name"`
+	OrganizationSlug          pulumi.StringOutput    `pulumi:"organizationSlug"`
+	Slug                      pulumi.StringPtrOutput `pulumi:"slug"`
 }
 
 // NewProject registers a new resource with the given unique name, arguments, and options.
@@ -59,15 +60,17 @@ func GetProject(ctx *pulumi.Context,
 
 // Input properties used for looking up and filtering Project resources.
 type projectState struct {
-	Name             *string `pulumi:"name"`
-	OrganizationSlug *string `pulumi:"organizationSlug"`
-	Slug             *string `pulumi:"slug"`
+	DefaultClientKeyDSNPublic *string `pulumi:"defaultClientKeyDSNPublic"`
+	Name                      *string `pulumi:"name"`
+	OrganizationSlug          *string `pulumi:"organizationSlug"`
+	Slug                      *string `pulumi:"slug"`
 }
 
 type ProjectState struct {
-	Name             pulumi.StringPtrInput
-	OrganizationSlug pulumi.StringPtrInput
-	Slug             pulumi.StringPtrInput
+	DefaultClientKeyDSNPublic pulumi.StringPtrInput
+	Name                      pulumi.StringPtrInput
+	OrganizationSlug          pulumi.StringPtrInput
+	Slug                      pulumi.StringPtrInput
 }
 
 func (ProjectState) ElementType() reflect.Type {

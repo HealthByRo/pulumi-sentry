@@ -96,6 +96,11 @@ func TestProjectCreate(t *testing.T) {
 					Slug: stringPtr("slug-from-create"),
 				}, nil
 			},
+			getClientKeys: func(o sentry.Organization, p sentry.Project) ([]sentry.Key, error) {
+				return []sentry.Key{
+					{Label: "Default", DSN: sentry.DSN{Public: "public-dsn"}},
+				}, nil
+			},
 		},
 	}
 	inputs := resource.PropertyMap{
@@ -109,10 +114,9 @@ func TestProjectCreate(t *testing.T) {
 	assert.True(t, createCalled)
 	assert.Equal(t, resp.GetId(), "the-org/slug-from-create")
 	assert.Equal(t, mustUnmarshalProperties(resp.GetProperties()), resource.PropertyMap{
-		"name":             resource.NewPropertyValue("name-from-create"),
-		"organizationSlug": resource.NewPropertyValue("the-org"),
-		"slug":             resource.NewPropertyValue("slug-from-create"),
-		"teamSlug":         resource.NewPropertyValue("the-team"),
+		"name":                      resource.NewPropertyValue("name-from-create"),
+		"slug":                      resource.NewPropertyValue("slug-from-create"),
+		"defaultClientKeyDSNPublic": resource.NewPropertyValue("public-dsn"),
 	})
 }
 

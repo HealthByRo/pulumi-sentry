@@ -31,6 +31,7 @@ export class Project extends pulumi.CustomResource {
         return obj['__pulumiType'] === Project.__pulumiType;
     }
 
+    public /*out*/ readonly defaultClientKeyDSNPublic!: pulumi.Output<string | undefined>;
     public readonly name!: pulumi.Output<string>;
     public readonly organizationSlug!: pulumi.Output<string>;
     public readonly slug!: pulumi.Output<string | undefined>;
@@ -61,7 +62,9 @@ export class Project extends pulumi.CustomResource {
             inputs["organizationSlug"] = args ? args.organizationSlug : undefined;
             inputs["slug"] = args ? args.slug : undefined;
             inputs["teamSlug"] = args ? args.teamSlug : undefined;
+            inputs["defaultClientKeyDSNPublic"] = undefined /*out*/;
         } else {
+            inputs["defaultClientKeyDSNPublic"] = undefined /*out*/;
             inputs["name"] = undefined /*out*/;
             inputs["organizationSlug"] = undefined /*out*/;
             inputs["slug"] = undefined /*out*/;

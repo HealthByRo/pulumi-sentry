@@ -11,6 +11,9 @@ namespace Pulumi.Sentry
 {
     public partial class Project : Pulumi.CustomResource
     {
+        [Output("defaultClientKeyDSNPublic")]
+        public Output<string?> DefaultClientKeyDSNPublic { get; private set; } = null!;
+
         [Output("name")]
         public Output<string> Name { get; private set; } = null!;
 
