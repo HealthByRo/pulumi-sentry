@@ -108,11 +108,7 @@ func (k *sentryProvider) projectRead(ctx context.Context, req *rpc.ReadRequest) 
 	if err != nil {
 		return nil, err
 	}
-	organization, err := k.sentryClient.GetOrganization(organizationSlug)
-	if err != nil {
-		return nil, err
-	}
-	project, err := k.sentryClient.GetProject(organization, slug)
+	project, err := k.sentryClient.GetProject(sentry.Organization{Slug: &organizationSlug}, slug)
 	if err != nil {
 		if apiError, ok := err.(*sentry.APIError); ok {
 			if apiError.StatusCode == 404 {
@@ -124,10 +120,9 @@ func (k *sentryProvider) projectRead(ctx context.Context, req *rpc.ReadRequest) 
 		return nil, err
 	}
 	properties := resource.NewPropertyMapFromMap(map[string]interface{}{
-		"organizationSlug": *project.Organization.Slug,
+		"organizationSlug": organizationSlug,
 		"name":             project.Name,
 		"slug":             *project.Slug,
-		"teamSlug":         *project.Team.Slug,
 	})
 	state, err := plugin.MarshalProperties(properties, plugin.MarshalOptions{
 		Label: label + ".state", KeepUnknowns: true, SkipNulls: true,
@@ -136,7 +131,7 @@ func (k *sentryProvider) projectRead(ctx context.Context, req *rpc.ReadRequest) 
 		return nil, err
 	}
 	return &rpc.ReadResponse{
-		Id:         buildProjectID(*project.Organization.Slug, *project.Slug),
+		Id:         buildProjectID(organizationSlug, *project.Slug),
 		Properties: state,
 	}, nil
 }

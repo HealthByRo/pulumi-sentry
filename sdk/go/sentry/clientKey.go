@@ -14,15 +14,13 @@ import (
 type ClientKey struct {
 	pulumi.CustomResourceState
 
-	DateCreated      pulumi.StringPtrOutput `pulumi:"dateCreated"`
-	DsnCSP           pulumi.StringPtrOutput `pulumi:"dsnCSP"`
-	DsnPublic        pulumi.StringPtrOutput `pulumi:"dsnPublic"`
-	DsnSecret        pulumi.StringPtrOutput `pulumi:"dsnSecret"`
-	Name             pulumi.StringPtrOutput `pulumi:"name"`
-	OrganizationSlug pulumi.StringPtrOutput `pulumi:"organizationSlug"`
-	ProjectSlug      pulumi.StringPtrOutput `pulumi:"projectSlug"`
-	Public           pulumi.StringPtrOutput `pulumi:"public"`
-	Secret           pulumi.StringPtrOutput `pulumi:"secret"`
+	DateCreated pulumi.StringPtrOutput `pulumi:"dateCreated"`
+	DsnCSP      pulumi.StringPtrOutput `pulumi:"dsnCSP"`
+	DsnPublic   pulumi.StringPtrOutput `pulumi:"dsnPublic"`
+	DsnSecret   pulumi.StringPtrOutput `pulumi:"dsnSecret"`
+	Name        pulumi.StringPtrOutput `pulumi:"name"`
+	Public      pulumi.StringPtrOutput `pulumi:"public"`
+	Secret      pulumi.StringPtrOutput `pulumi:"secret"`
 }
 
 // NewClientKey registers a new resource with the given unique name, arguments, and options.
@@ -67,27 +65,23 @@ func GetClientKey(ctx *pulumi.Context,
 
 // Input properties used for looking up and filtering ClientKey resources.
 type clientKeyState struct {
-	DateCreated      *string `pulumi:"dateCreated"`
-	DsnCSP           *string `pulumi:"dsnCSP"`
-	DsnPublic        *string `pulumi:"dsnPublic"`
-	DsnSecret        *string `pulumi:"dsnSecret"`
-	Name             *string `pulumi:"name"`
-	OrganizationSlug *string `pulumi:"organizationSlug"`
-	ProjectSlug      *string `pulumi:"projectSlug"`
-	Public           *string `pulumi:"public"`
-	Secret           *string `pulumi:"secret"`
+	DateCreated *string `pulumi:"dateCreated"`
+	DsnCSP      *string `pulumi:"dsnCSP"`
+	DsnPublic   *string `pulumi:"dsnPublic"`
+	DsnSecret   *string `pulumi:"dsnSecret"`
+	Name        *string `pulumi:"name"`
+	Public      *string `pulumi:"public"`
+	Secret      *string `pulumi:"secret"`
 }
 
 type ClientKeyState struct {
-	DateCreated      pulumi.StringPtrInput
-	DsnCSP           pulumi.StringPtrInput
-	DsnPublic        pulumi.StringPtrInput
-	DsnSecret        pulumi.StringPtrInput
-	Name             pulumi.StringPtrInput
-	OrganizationSlug pulumi.StringPtrInput
-	ProjectSlug      pulumi.StringPtrInput
-	Public           pulumi.StringPtrInput
-	Secret           pulumi.StringPtrInput
+	DateCreated pulumi.StringPtrInput
+	DsnCSP      pulumi.StringPtrInput
+	DsnPublic   pulumi.StringPtrInput
+	DsnSecret   pulumi.StringPtrInput
+	Name        pulumi.StringPtrInput
+	Public      pulumi.StringPtrInput
+	Secret      pulumi.StringPtrInput
 }
 
 func (ClientKeyState) ElementType() reflect.Type {

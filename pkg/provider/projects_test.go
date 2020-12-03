@@ -120,35 +120,23 @@ func TestProjectRead(t *testing.T) {
 	ctx := context.Background()
 	prov := sentryProvider{
 		sentryClient: &sentryClientMock{
-			getOrganization: func(orgSlug string) (sentry.Organization, error) {
-				return sentry.Organization{Slug: &orgSlug, Name: "org " + orgSlug}, nil
-			},
 			getProject: func(org sentry.Organization, projslug string) (sentry.Project, error) {
 				assert.Equal(t, *org.Slug, "org-slug")
 				assert.Equal(t, projslug, "proj-slug")
 				return sentry.Project{
 					Name: "name-from-read",
 					Slug: stringPtr("slug-from-read"),
-					Organization: &sentry.Organization{
-						Name: "the org from read",
-						Slug: stringPtr("the-org-from-read"),
-					},
-					Team: &sentry.Team{
-						Name: "the team from read",
-						Slug: stringPtr("the-team-from-read"),
-					},
 				}, nil
 			},
 		},
 	}
 	resp, err := prov.projectRead(ctx, &rpc.ReadRequest{Id: "org-slug/proj-slug"})
 	assert.Nil(t, err)
-	assert.Equal(t, resp.GetId(), "the-org-from-read/slug-from-read")
+	assert.Equal(t, resp.GetId(), "org-slug/slug-from-read")
 	assert.Equal(t, mustUnmarshalProperties(resp.GetProperties()), resource.PropertyMap{
 		"name":             resource.NewPropertyValue("name-from-read"),
-		"organizationSlug": resource.NewPropertyValue("the-org-from-read"),
+		"organizationSlug": resource.NewPropertyValue("org-slug"),
 		"slug":             resource.NewPropertyValue("slug-from-read"),
-		"teamSlug":         resource.NewPropertyValue("the-team-from-read"),
 	})
 }
 

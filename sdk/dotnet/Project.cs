@@ -77,9 +77,6 @@ namespace Pulumi.Sentry
         [Input("slug", required: true)]
         public Input<string> Slug { get; set; } = null!;
 
-        [Input("teamSlug", required: true)]
-        public Input<string> TeamSlug { get; set; } = null!;
-
         public ProjectArgs()
         {
         }

@@ -12,16 +12,12 @@
                 },
                 "slug": {
                     "type": "string"
-                },
-                "teamSlug": {
-                    "type": "string"
                 }
             },
             "requiredInputs": [
                 "organizationSlug",
                 "slug",
-                "name",
-                "teamSlug"
+                "name"
             ],
             "properties": {
                 "organizationSlug": {

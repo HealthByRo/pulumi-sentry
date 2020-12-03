@@ -32,9 +32,6 @@ func NewProject(ctx *pulumi.Context,
 	if args == nil || args.Slug == nil {
 		return nil, errors.New("missing required argument 'Slug'")
 	}
-	if args == nil || args.TeamSlug == nil {
-		return nil, errors.New("missing required argument 'TeamSlug'")
-	}
 	if args == nil {
 		args = &ProjectArgs{}
 	}
@@ -81,7 +78,6 @@ type projectArgs struct {
 	Name             string `pulumi:"name"`
 	OrganizationSlug string `pulumi:"organizationSlug"`
 	Slug             string `pulumi:"slug"`
-	TeamSlug         string `pulumi:"teamSlug"`
 }
 
 // The set of arguments for constructing a Project resource.
@@ -89,7 +85,6 @@ type ProjectArgs struct {
 	Name             pulumi.StringInput
 	OrganizationSlug pulumi.StringInput
 	Slug             pulumi.StringInput
-	TeamSlug         pulumi.StringInput
 }
 
 func (ProjectArgs) ElementType() reflect.Type {
