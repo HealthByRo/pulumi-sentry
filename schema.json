@@ -19,6 +19,7 @@
             },
             "requiredInputs": [
                 "organizationSlug",
+                "slug",
                 "name",
                 "teamSlug"
             ],

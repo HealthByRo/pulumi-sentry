@@ -52,6 +52,9 @@ export class Project extends pulumi.CustomResource {
             if (!args || args.organizationSlug === undefined) {
                 throw new Error("Missing required property 'organizationSlug'");
             }
+            if (!args || args.slug === undefined) {
+                throw new Error("Missing required property 'slug'");
+            }
             if (!args || args.teamSlug === undefined) {
                 throw new Error("Missing required property 'teamSlug'");
             }
@@ -82,6 +85,6 @@ export class Project extends pulumi.CustomResource {
 export interface ProjectArgs {
     readonly name: pulumi.Input<string>;
     readonly organizationSlug: pulumi.Input<string>;
-    readonly slug?: pulumi.Input<string>;
+    readonly slug: pulumi.Input<string>;
     readonly teamSlug: pulumi.Input<string>;
 }

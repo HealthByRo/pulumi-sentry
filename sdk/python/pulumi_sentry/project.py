@@ -50,6 +50,8 @@ class Project(pulumi.CustomResource):
             if organization_slug is None:
                 raise TypeError("Missing required property 'organization_slug'")
             __props__['organization_slug'] = organization_slug
+            if slug is None:
+                raise TypeError("Missing required property 'slug'")
             __props__['slug'] = slug
             if team_slug is None:
                 raise TypeError("Missing required property 'team_slug'")
