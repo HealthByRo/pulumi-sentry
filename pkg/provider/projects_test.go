@@ -170,7 +170,9 @@ func TestProjectCreate(t *testing.T) {
 	assert.Equal(t, resp.GetId(), "the-org/slug-from-create")
 	assert.Equal(t, mustUnmarshalProperties(resp.GetProperties()), resource.PropertyMap{
 		"name":                      resource.NewPropertyValue("name-from-create"),
+		"organizationSlug":          resource.NewPropertyValue("the-org"),
 		"slug":                      resource.NewPropertyValue("slug-from-create"),
+		"teamSlug":                  resource.NewPropertyValue("the-team"),
 		"defaultClientKeyDSNPublic": resource.NewPropertyValue("public-dsn"),
 	})
 }
