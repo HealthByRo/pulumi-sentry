@@ -56,8 +56,7 @@ func createProjects(ctx *pulumi.Context) error {
 }
 
 func getenvWithDefault(name, dflt string) string {
-	ret := os.Getenv(name)
-	if ret != "" {
+	if ret, ok := os.LookupEnv(name); ok {
 		return ret
 	}
 	return dflt
