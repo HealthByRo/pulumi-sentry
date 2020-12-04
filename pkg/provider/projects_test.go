@@ -253,6 +253,21 @@ func TestProjectRead(t *testing.T) {
 	})
 }
 
+func TestProjectRead404(t *testing.T) {
+	ctx := context.Background()
+	prov := sentryProvider{
+		sentryClient: &sentryClientMock{
+			getProject: func(org sentry.Organization, projslug string) (sentry.Project, error) {
+				return sentry.Project{}, &sentry.APIError{Detail: "not found", StatusCode: 404}
+			},
+		},
+	}
+	resp, err := prov.projectRead(ctx, &rpc.ReadRequest{Id: "org-slug/proj-slug"})
+	assert.Nil(t, err)
+	assert.Equal(t, resp.GetId(), "")
+	assert.Nil(t, resp.GetProperties())
+}
+
 func TestProjectDelete(t *testing.T) {
 	ctx := context.Background()
 	deleteCalled := false
