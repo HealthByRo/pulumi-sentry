@@ -216,7 +216,7 @@ func (k *sentryProvider) projectRead(ctx context.Context, req *rpc.ReadRequest) 
 	}
 	project, err := k.sentryClient.GetProject(sentry.Organization{Slug: &organizationSlug}, slug)
 	if err != nil {
-		if apiError, ok := err.(*sentry.APIError); ok {
+		if apiError, ok := err.(sentry.APIError); ok {
 			if apiError.StatusCode == 404 {
 				// The project is not there, delete it from stack state.
 				return &rpc.ReadResponse{}, nil
