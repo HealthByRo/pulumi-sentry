@@ -258,7 +258,7 @@ func TestProjectRead404(t *testing.T) {
 	prov := sentryProvider{
 		sentryClient: &sentryClientMock{
 			getProject: func(org sentry.Organization, projslug string) (sentry.Project, error) {
-				return sentry.Project{}, &sentry.APIError{Detail: "not found", StatusCode: 404}
+				return sentry.Project{}, sentry.APIError{Detail: "not found", StatusCode: 404}
 			},
 		},
 	}
