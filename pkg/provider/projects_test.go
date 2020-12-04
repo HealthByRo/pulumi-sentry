@@ -124,11 +124,10 @@ func TestProjectDiff(t *testing.T) {
 				"name":               resource.NewPropertyValue("new name"),
 				"subjectPrefix":      resource.NewPropertyValue("new subject prefix"),
 				"subjectTemplate":    resource.NewPropertyValue("new subject template"),
-				"teamSlug":           resource.NewPropertyValue("new-team-slug"),
 			}),
 			wantResponse: rpc.DiffResponse{
 				Changes: rpc.DiffResponse_DIFF_SOME,
-				Diffs:   []string{"defaultEnvironment", "name", "teamSlug", "subjectPrefix", "subjectTemplate"},
+				Diffs:   []string{"defaultEnvironment", "name", "subjectPrefix", "subjectTemplate"},
 			},
 		},
 		"replacement": {
@@ -136,11 +135,12 @@ func TestProjectDiff(t *testing.T) {
 			news: propertyMapWithOverrides(baseOlds, resource.PropertyMap{
 				"organizationSlug": resource.NewPropertyValue("new-org-slug"),
 				"slug":             resource.NewPropertyValue("new-slug"),
+				"teamSlug":         resource.NewPropertyValue("new-team-slug"),
 			}),
 			wantResponse: rpc.DiffResponse{
 				Changes:             rpc.DiffResponse_DIFF_SOME,
-				Diffs:               []string{"organizationSlug", "slug"},
-				Replaces:            []string{"organizationSlug", "slug"},
+				Diffs:               []string{"organizationSlug", "slug", "teamSlug"},
+				Replaces:            []string{"organizationSlug", "slug", "teamSlug"},
 				DeleteBeforeReplace: true,
 			},
 		},
@@ -269,4 +269,47 @@ func TestProjectDelete(t *testing.T) {
 	_, err := prov.projectDelete(ctx, &rpc.DeleteRequest{Id: "the-org/the-proj"})
 	assert.Nil(t, err)
 	assert.True(t, deleteCalled)
+}
+
+func TestProjectUpdate(t *testing.T) {
+	ctx := context.Background()
+	updateCalled := false
+	prov := sentryProvider{
+		sentryClient: &sentryClientMock{
+			updateProject: func(org sentry.Organization, proj sentry.Project) error {
+				assert.Equal(t, *org.Slug, "org-slug")
+				assert.Equal(t, *proj.DefaultEnvironment, "new env name")
+				assert.Equal(t, *proj.Slug, "proj-slug")
+				assert.Equal(t, proj.Name, "new name")
+				assert.Equal(t, *proj.SubjectPrefix, "new subject prefix")
+				assert.Equal(t, *proj.SubjectTemplate, "new subject template")
+				assert.Nil(t, proj.Team)
+				updateCalled = true
+				return nil
+			},
+		},
+	}
+	olds := resource.PropertyMap{
+		"defaultEnvironment": resource.NewPropertyValue("env name"),
+		"name":               resource.NewPropertyValue("a name"),
+		"organizationSlug":   resource.NewPropertyValue("org-slug"),
+		"slug":               resource.NewPropertyValue("proj-slug"),
+		"subjectPrefix":      resource.NewPropertyValue("subject prefix"),
+		"subjectTemplate":    resource.NewPropertyValue("subject template"),
+		"teamSlug":           resource.NewPropertyValue("the-team"),
+	}
+	news := propertyMapWithOverrides(olds, resource.PropertyMap{
+		"defaultEnvironment": resource.NewPropertyValue("new env name"),
+		"name":               resource.NewPropertyValue("new name"),
+		"subjectPrefix":      resource.NewPropertyValue("new subject prefix"),
+		"subjectTemplate":    resource.NewPropertyValue("new subject template"),
+	})
+	resp, err := prov.projectUpdate(ctx, &rpc.UpdateRequest{
+		Id:   "org-slug/proj-slug",
+		News: mustMarshalProperties(news),
+		Olds: mustMarshalProperties(olds),
+	})
+	assert.Nil(t, err)
+	assert.True(t, updateCalled)
+	assert.Equal(t, mustUnmarshalProperties(resp.GetProperties()), news)
 }

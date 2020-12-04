@@ -60,13 +60,31 @@ func (k *sentryProvider) projectDiff(olds, news resource.PropertyMap) (*rpc.Diff
 		// project's slug requires a replacement.
 		"organizationSlug": true,
 		"slug":             true,
+
+		// Changing a project's owner team is a more complex operation now: I
+		// can't find any up to date documentation about it, only deprecation
+		// warnings on updating the team via the "update project" endpoint (it
+		// is already deprecated and not functioning on sentry.io).  I checked
+		// in Sentry code and it was already mostly refactored to not have the
+		// notion of an "owner team", just "teams with access to" (although it
+		// pretends to have one of them singled out as "the team" for the
+		// project).
+		//
+		// Taking that into account I'm shelving this.  Doing it cleanly will
+		// require changing the input on the Project resource from a single
+		// teamSlug to an array of slugs, and updating the go-sentry-api
+		// library, all so that we don't spend time handling the old
+		// abstraction that Sentry is already out of.  For the time being let's
+		// handle team changes by replacements and return to them when we know
+		// we need them.
+		"teamSlug": true,
 	}
 	var diffs, replaces []string
-	for _, key := range []string{"defaultEnvironment", "organizationSlug", "name", "slug", "teamSlug", "subjectPrefix", "subjectTemplate"} {
-		if d.Changed(resource.PropertyKey(key)) {
-			diffs = append(diffs, key)
-			if changeRequiresReplacement[key] {
-				replaces = append(replaces, key)
+	for _, key := range d.Keys() {
+		if d.Changed(key) {
+			diffs = append(diffs, string(key))
+			if changeRequiresReplacement[string(key)] {
+				replaces = append(replaces, string(key))
 			}
 		}
 	}
@@ -131,6 +149,59 @@ func (k *sentryProvider) projectCreate(ctx context.Context, req *rpc.CreateReque
 		Id:         buildProjectID(organizationSlug, *project.Slug),
 		Properties: outputProperties,
 	}, nil
+}
+
+func (k *sentryProvider) projectUpdate(ctx context.Context, req *rpc.UpdateRequest) (*rpc.UpdateResponse, error) {
+	urn := resource.URN(req.GetUrn())
+	label := fmt.Sprintf("%s.Read(%s)", k.label(), urn)
+	logger.V(9).Infof("%s executing", label)
+
+	organizationSlug, slug, err := parseProjectID(req.GetId())
+	if err != nil {
+		return nil, err
+	}
+	olds, err := plugin.UnmarshalProperties(req.GetOlds(), plugin.MarshalOptions{
+		Label: fmt.Sprintf("%s.olds", label),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed projectUpdate because of malformed resource inputs: %w", err)
+	}
+	news, err := plugin.UnmarshalProperties(req.GetNews(), plugin.MarshalOptions{
+		Label: fmt.Sprintf("%s.news", label),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed projectUpdate because of malformed resource inputs: %w", err)
+	}
+
+	d := olds.Diff(news)
+	if d == nil {
+		// This would be really surprising, pulumi should not let that happen.
+		return &rpc.UpdateResponse{}, nil
+	}
+
+	// This should already be validated in Diff, but let's be strict just in case.
+	allowChanges := map[string]bool{
+		"defaultEnvironment": true,
+		"name":               true,
+		"subjectPrefix":      true,
+		"subjectTemplate":    true,
+	}
+	for _, key := range d.Keys() {
+		if d.Changed(key) && !allowChanges[string(key)] {
+			return nil, fmt.Errorf("projectUpdate: don't know how to change %v", key)
+		}
+	}
+
+	project := sentry.Project{
+		Slug:               &slug,
+		DefaultEnvironment: stringPtr(news["defaultEnvironment"].StringValue()),
+		Name:               news["name"].StringValue(),
+		SubjectPrefix:      stringPtr(news["subjectPrefix"].StringValue()),
+		SubjectTemplate:    stringPtr(news["subjectTemplate"].StringValue()),
+	}
+
+	err = k.sentryClient.UpdateProject(sentry.Organization{Slug: &organizationSlug}, project)
+	return &rpc.UpdateResponse{Properties: req.GetNews()}, nil
 }
 
 func (k *sentryProvider) projectRead(ctx context.Context, req *rpc.ReadRequest) (*rpc.ReadResponse, error) {
