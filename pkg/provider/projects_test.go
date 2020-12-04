@@ -122,25 +122,25 @@ func TestProjectDiff(t *testing.T) {
 			news: propertyMapWithOverrides(baseOlds, resource.PropertyMap{
 				"defaultEnvironment": resource.NewPropertyValue("new env name"),
 				"name":               resource.NewPropertyValue("new name"),
-				"slug":               resource.NewPropertyValue("new-slug"),
 				"subjectPrefix":      resource.NewPropertyValue("new subject prefix"),
 				"subjectTemplate":    resource.NewPropertyValue("new subject template"),
 				"teamSlug":           resource.NewPropertyValue("new-team-slug"),
 			}),
 			wantResponse: rpc.DiffResponse{
 				Changes: rpc.DiffResponse_DIFF_SOME,
-				Diffs:   []string{"defaultEnvironment", "name", "slug", "teamSlug", "subjectPrefix", "subjectTemplate"},
+				Diffs:   []string{"defaultEnvironment", "name", "teamSlug", "subjectPrefix", "subjectTemplate"},
 			},
 		},
 		"replacement": {
 			olds: baseOlds,
 			news: propertyMapWithOverrides(baseOlds, resource.PropertyMap{
 				"organizationSlug": resource.NewPropertyValue("new-org-slug"),
+				"slug":             resource.NewPropertyValue("new-slug"),
 			}),
 			wantResponse: rpc.DiffResponse{
 				Changes:             rpc.DiffResponse_DIFF_SOME,
-				Diffs:               []string{"organizationSlug"},
-				Replaces:            []string{"organizationSlug"},
+				Diffs:               []string{"organizationSlug", "slug"},
+				Replaces:            []string{"organizationSlug", "slug"},
 				DeleteBeforeReplace: true,
 			},
 		},

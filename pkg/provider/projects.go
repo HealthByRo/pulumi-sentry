@@ -49,7 +49,17 @@ func (k *sentryProvider) projectDiff(olds, news resource.PropertyMap) (*rpc.Diff
 	}
 
 	changeRequiresReplacement := map[string]bool{
+		// Organization and project slugs are part of the Project's ID.
+		//
+		// Sentry API allows changing the project slug, but Pulumi does not
+		// allow updating a resource ID in `update`, so if we were to allow
+		// that we would have to use artificial IDs on Pulumi side instead of
+		// the fully readable and predictable <orgSlug>/<projSlug>.
+		//
+		// It does not sound worth it, let's just assume that changing a
+		// project's slug requires a replacement.
 		"organizationSlug": true,
+		"slug":             true,
 	}
 	var diffs, replaces []string
 	for _, key := range []string{"defaultEnvironment", "organizationSlug", "name", "slug", "teamSlug", "subjectPrefix", "subjectTemplate"} {
