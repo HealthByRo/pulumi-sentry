@@ -188,7 +188,7 @@ func (k *sentryProvider) Update(ctx context.Context, req *rpc.UpdateRequest) (*r
 
 	switch ty {
 	case "sentry:index:Project":
-		panic("Update not implemented for sentry:index:Project")
+		return k.projectUpdate(ctx, req)
 	}
 
 	return nil, fmt.Errorf("Unknown resource type '%s'", ty)
