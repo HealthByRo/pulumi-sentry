@@ -1,9 +1,11 @@
+> **:warning: This fork is not currently maintained and will be archived then removed in the future.**
+
 # Pulumi Provider for Sentry
 
-This repository implements a Pulumi provider for Sentry resources.  It started
+This repository implements a Pulumi provider for Sentry resources. It started
 as a clone of the [Pulumi provider boilerplate](https://github.com/pulumi/pulumi-provider-boilerplate).
 
-**THIS IS EARLY STAGE, WORK IN PROGRESS CODE**.  Not complete for real world usage yet.
+**THIS IS EARLY STAGE, WORK IN PROGRESS CODE**. Not complete for real world usage yet.
 
 ## Overview
 
@@ -20,7 +22,6 @@ For simplicity I iterate on this project by calling variations on:
 ```
 make rebuild-sdk install-provider && pulumi -C examples/sample-project/ up
 ```
-
 
 ## Running the sample project
 
@@ -43,14 +44,14 @@ pulumi config set --secret sentry:token <integration-token>
 You might need to find the right API URL if you use Sentry other than https://sentry.io.
 
 To make testing easier, `sample-project` is configurable via environment
-variables.  You will have to override at least the organization slug, see
-`examples/sample-project/main.go` for the list of variables.  You can also test
+variables. You will have to override at least the organization slug, see
+`examples/sample-project/main.go` for the list of variables. You can also test
 adding or removing the project by setting `SKIP_PROJECT=1`.
 
 ## References
 
 Other resoruces for learning about the Pulumi resource model:
 
-* [Pulumi provider boilerplate](https://github.com/pulumi/pulumi-provider-boilerplate)
-* [Pulumi Kubernetes provider](https://github.com/pulumi/pulumi-kubernetes/blob/master/provider/pkg/provider/provider.go)
-* [Pulumi Terraform Remote State provider](https://github.com/pulumi/pulumi-terraform/blob/master/provider/cmd/pulumi-resource-terraform/provider.go)
+- [Pulumi provider boilerplate](https://github.com/pulumi/pulumi-provider-boilerplate)
+- [Pulumi Kubernetes provider](https://github.com/pulumi/pulumi-kubernetes/blob/master/provider/pkg/provider/provider.go)
+- [Pulumi Terraform Remote State provider](https://github.com/pulumi/pulumi-terraform/blob/master/provider/cmd/pulumi-resource-terraform/provider.go)
